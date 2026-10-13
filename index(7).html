@@ -390,7 +390,12 @@ tr:hover td{background:#22223a}
     <p class="subtitle">Sign in to continue</p>
     <input type="text" id="lName" placeholder="Your Name" autocomplete="off">
     <input type="password" id="lPass" placeholder="Password">
+
+    <!-- MY EXISTING SIGN IN BUTTON -->
     <button class="btn-login" onclick="doLogin()">Sign In</button>
+
+    <!-- MY DEMO SIGN IN BUTTON -->
+    <button class="btn-login" style="background: #6c757d; margin-top: 8px;" onclick="loginAsDemo()">Try Demo Mode (Read-Only)</button>
     <div class="login-err" id="lErr"></div>
   </div>
 </div>
@@ -1648,6 +1653,44 @@ window.doLogin = async function(){
     if(btn){btn.disabled=false;btn.textContent='Sign In';}
   }
 };
+
+  // Function to handle Demo Mode Login
+window.loginAsDemo = async function() {
+  window.isDemoMode = true;
+  try {
+    await Promise.all([staffRosterReady, svcMenuReady]);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('uBadge').textContent = 'Demo Admin 👑';
+    document.getElementById('demo-banner').style.display = 'block';
+    await initApp();
+
+    document.getElementById('gEmoji').innerText = '🔍';
+    document.getElementById('gName').innerText = 'Demo Visitor';
+    document.getElementById('gMsg').innerText = 'Welcome to Nita\'s Salon POS Admin Demo!';
+    document.getElementById('gSub').innerText = 'You are viewing this system in read-only mode.';
+    document.getElementById('gTip').innerText = 'Feel free to explore the tabs and features. Saving or changing data is disabled.';
+    document.getElementById('greetOverlay').style.display = 'flex';
+
+    lockAppForDemo();
+  } catch (err) {
+    console.error('Demo login error:', err);
+  }
+};
+
+function lockAppForDemo() {
+  setTimeout(() => {
+    const interactiveElements = document.querySelectorAll('button, input, select, textarea');
+    interactiveElements.forEach(el => {
+      const text = el.innerText ? el.innerText.toLowerCase() : '';
+      if (!text.includes('cancel') && !text.includes('close') && !el.classList.contains('btn-start')) {
+        el.disabled = true;
+        el.style.opacity = '0.6';
+        el.style.cursor = 'not-allowed';
+      }
+    });
+  }, 500);
+}
 
 window.doLogout=function(){
   if(typeof unsub!=='undefined'&&unsub)try{unsub();}catch(e){}
@@ -6136,6 +6179,13 @@ window.showMonthlySummary = function(){
     if(CU&&CU.role!=='admin'){ loadNotifications(); }
   }, 3000);
 })();
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true') {
+      loginAsDemo();
+    }
+  });
 
 </script>
 <!-- ══ MARK PAID MODAL ══ -->
