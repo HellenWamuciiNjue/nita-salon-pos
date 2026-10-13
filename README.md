@@ -1,29 +1,29 @@
 # Nita's Salon POS
 
-A lightweight, modern, and responsive **Point of Sale (POS) and business management web application** tailored specifically for salons and beauty parlors Designed with a clean frontend interface and robust seed data, it streamlines daily sales, service tracking, and receipt management
+A lightweight, modern, and responsive **Point of Sale (POS) and business management web application** tailored specifically for salons and beauty parlors. Designed with a clean frontend interface and robust seed data, it streamlines daily sales, service tracking, and receipt management.
 
 ---
 
 ## Login Page Preview
 
-![Nita's Salon POS Login](login-preview.png)
+![Nita's Salon POS Login](login-preview.PNG)
 
 ---
 
 ## Features
 
-* **Interactive POS Interface**: Clean, user-friendly checkout layout optimized for fast transactions
-* **Service & Product Management**: Easily navigate and select salon treatments, packages, and products
-* **Transaction Tracking**: Built-in seed data and tracking mechanisms to review recent sales and activity
-* **Responsive Design**: Fully mobile-friendly and adaptable layout built with modern styling and UI logic
+* **Interactive POS Interface**: Clean, user-friendly checkout layout optimized for fast transactions.
+* **Service & Product Management**: Easily navigate and select salon treatments, packages, and products.
+* **Transaction Tracking**: Built-in seed data and tracking mechanisms to review recent sales and activity.
+* **Responsive Design**: Fully mobile-friendly and adaptable layout built with modern styling and UI logic.
 
 ---
 
 ## Tech Stack
 
-* **HTML5**: Core page structure and layout
-* **CSS3 / Styling**: Modern UI elements, custom styling, and layout controls
-* **JavaScript**: Frontend logic, interactive components, and seed transaction handling
+* **HTML5**: Core page structure and layout.
+* **CSS3 / Styling**: Modern UI elements, custom styling, and layout controls.
+* **JavaScript**: Frontend logic, interactive components, and seed transaction handling.
 
 ---
 
@@ -33,6 +33,7 @@ A lightweight, modern, and responsive **Point of Sale (POS) and business managem
 To run or modify this project locally, all you need is a modern web browser (Chrome, Firefox, Safari, Edge) and a code editor like [VS Code](https://code.visualstudio.com/).
 
 ### Installation & Running Locally
+
 1. **Clone the repository**:
    ```bash
    git clone [https://github.com/HellenWamuciiNjue/nita-salon-pos.git](https://github.com/HellenWamuciiNjue/nita-salon-pos.git)
