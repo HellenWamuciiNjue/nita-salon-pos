@@ -1977,14 +1977,13 @@ function buildBottomNav(){
 
 // ===== NAV =====
 function goPage(p){
-  // Check if we are trying to go to settings and if demo mode is active
-  const isDemo = document.body.classList.contains('demo-mode') || 
-                 (window.currentUser && window.currentUser.role === 'demo') ||
-                 document.querySelector('.demo-badge') !== null;
+  // Check if the user is currently in demo mode by looking at the badge text or element
+  const badge = document.getElementById('uBadge');
+  const isDemo = badge && badge.textContent.includes('Demo Admin');
 
   if (p === 'settings' && isDemo) {
-    // Silently block the navigation and keep them on their current page
-    return;
+    alert("🔒 Settings are locked in Demo Mode to protect system configuration.");
+    return; // Completely blocks navigation to settings!
   }
 
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
