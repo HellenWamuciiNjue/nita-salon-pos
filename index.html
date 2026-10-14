@@ -1668,6 +1668,16 @@ if (typeof getFilteredTX === 'function' && !window._originalGetFilteredTX) {
   };
 }
 
+  // ===== FORCE DATA FETCHER TO USE DEMO DATA =====
+window.getTransactions = window.getTransactions || async function() { return window.transactions || []; };
+window.loadTransactions = window.loadTransactions || async function() { return window.transactions || []; };
+
+// ===== YOUR LOGIN AS DEMO FUNCTION =====
+window.loginAsDemo = function() {
+  window.isDemoMode = true;
+  // ... rest of your demo login code ...
+};
+
 window.loginAsDemo = function() {
   window.isDemoMode = true;
   
