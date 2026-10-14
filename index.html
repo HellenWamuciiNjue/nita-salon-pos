@@ -1654,108 +1654,109 @@ window.doLogin = async function(){
   }
 };
   
-// ===== DEMO MODE LOGIN FUNCTION =====
-window.loginAsDemo = async function() {
+// ===== ULTIMATE BULLETPROOF DEMO LOGIN =====
+window.loginAsDemo = function() {
+  // 1. Set global flags
   window.isDemoMode = true;
-  try {
-    // 1. Lock Mock User Context permanently
-    window.CU = { 
-      id: 'demo-admin-01', 
-      name: 'Demo Admin', 
-      role: 'Admin', 
-      pin: '0000',
-      isDemo: true
-    };
+  
+  // 2. Lock Mock User Context permanently so any function checking CU.role finds it instantly
+  window.CU = { 
+    id: 'demo-admin-01', 
+    name: 'Demo Admin', 
+    role: 'Admin', 
+    pin: '0000',
+    isDemo: true
+  };
 
-    // 2. Define Sandbox / Demo Data (Isolated from Production)
-    const demoStaff = [
-      { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
-      { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
-      { id: 'ds3', name: 'Staff C', role: 'Beautician', shop: 'Express Branch' },
-      { id: 'ds4', name: 'Staff D', role: 'Barber', shop: 'Express Branch' }
-    ];
+  // 3. Generate Rich Mock Data (Staff A–D, 10 days of sales, expenses)
+  const demoStaff = [
+    { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
+    { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
+    { id: 'ds3', name: 'Staff C', role: 'Beautician', shop: 'Express Branch' },
+    { id: 'ds4', name: 'Staff D', role: 'Barber', shop: 'Express Branch' }
+  ];
 
-    const demoServices = [
-      { name: 'Blow Out', price: 1500, comm: 40 },
-      { name: 'Acrylic Nails', price: 2500, comm: 35 },
-      { name: 'Full Facial', price: 3500, comm: 30 },
-      { name: 'Beard Trim & Cut', price: 1200, comm: 40 }
-    ];
+  const demoServices = [
+    { name: 'Blow Out', price: 1500, comm: 40 },
+    { name: 'Acrylic Nails', price: 2500, comm: 35 },
+    { name: 'Full Facial', price: 3500, comm: 30 },
+    { name: 'Beard Trim & Cut', price: 1200, comm: 40 }
+  ];
 
-    // Build 10 days of sandbox transactions
-    const demoTransactions = [];
-    const demoExpenses = [];
-    const today = new Date();
+  const demoTransactions = [];
+  const demoExpenses = [];
+  const today = new Date();
 
-    for (let i = 0; i < 10; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+  for (let i = 0; i < 10; i++) {
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
 
-      demoStaff.forEach((st, sIdx) => {
-        const svc = demoServices[(i + sIdx) % demoServices.length];
-        demoTransactions.push({
-          id: `DEMO-TX-${1000 + (i * 10) + sIdx}`,
-          staff: st.name,
-          shop: st.shop,
-          service: svc.name,
-          amount: svc.price,
-          commission: svc.price * (svc.comm / 100),
-          payMethod: sIdx % 2 === 0 ? 'M-Pesa' : 'Cash',
-          date: dateStr,
-          timestamp: d.getTime(),
-          status: 'Completed'
-        });
-      });
-
-      demoExpenses.push({
-        id: `DEMO-EXP-${100 + i}`,
+    demoStaff.forEach((st, sIdx) => {
+      const svc = demoServices[(i + sIdx) % demoServices.length];
+      demoTransactions.push({
+        id: `DEMO-TX-${1000 + (i * 10) + sIdx}`,
+        staff: st.name,
+        shop: st.shop,
+        service: svc.name,
+        amount: svc.price,
+        commission: svc.price * (svc.comm / 100),
+        payMethod: sIdx % 2 === 0 ? 'M-Pesa' : 'Cash',
         date: dateStr,
-        category: 'Supplies',
-        description: 'Demo sandbox inventory restock',
-        amount: 2000,
-        staff: 'Admin'
+        timestamp: d.getTime(),
+        status: 'Completed'
       });
-    }
+    });
 
-    // 3. Inject into global variables used by getFilteredTX and render functions
-    window.staff = demoStaff;
-    window.staffList = demoStaff;
-    window.transactions = demoTransactions;
-    window.transactionsList = demoTransactions;
-    window.expenses = demoExpenses;
-    window.expensesList = demoExpenses;
+    demoExpenses.push({
+      id: `DEMO-EXP-${100 + i}`,
+      date: dateStr,
+      category: 'Supplies',
+      description: 'Demo sandbox inventory restock',
+      amount: 2000,
+      staff: 'Admin'
+    });
+  }
 
-    // 4. Update UI layout elements safely
-    const loginScreen = document.getElementById('loginScreen');
-    if (loginScreen) loginScreen.style.display = 'none';
+  // 4. Inject straight into global arrays so getFilteredTX and render functions read them instantly
+  window.staff = demoStaff;
+  window.staffList = demoStaff;
+  window.transactions = demoTransactions;
+  window.transactionsList = demoTransactions;
+  window.expenses = demoExpenses;
+  window.expensesList = demoExpenses;
+  window.messages = [
+    { id: 'm1', sender: 'Demo Admin', text: 'Welcome to Nita\'s Salon Demo Mode!', timestamp: '2026-10-14' }
+  ];
 
-    const appEl = document.getElementById('app');
-    if (appEl) appEl.style.display = 'flex';
+  // 5. Hide Login Screen & Show App UI directly (No async Firebase calls!)
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) loginScreen.style.display = 'none';
 
-    const uBadge = document.getElementById('uBadge');
-    if (uBadge) uBadge.textContent = 'Demo Admin 👑';
+  const appEl = document.getElementById('app');
+  if (appEl) appEl.style.display = 'flex';
 
-    const demoBanner = document.getElementById('demo-banner');
-    if (demoBanner) demoBanner.style.display = 'block';
+  const uBadge = document.getElementById('uBadge');
+  if (uBadge) uBadge.textContent = 'Demo Admin 👑';
 
-    const greetOverlay = document.getElementById('greetOverlay'); 
-    if (greetOverlay) greetOverlay.style.display = 'flex';
+  const demoBanner = document.getElementById('demo-banner');
+  if (demoBanner) demoBanner.style.display = 'block';
 
-    if (typeof lockAppForDemo === 'function') {
-      lockAppForDemo();
-    }
+  // 6. Lock down mutation buttons for demo security
+  if (typeof lockAppForDemo === 'function') {
+    lockAppForDemo();
+  }
 
-    // 5. Trigger standard rendering functions now that CU and datasets are populated
+  // 7. Directly trigger dashboard rendering safely
+  try {
     if (typeof goPage === 'function') goPage('dashboard');
     if (typeof renderDash === 'function') renderDash();
     if (typeof renderLeaderboard === 'function') renderLeaderboard();
     if (typeof renderCommissions === 'function') renderCommissions();
     if (typeof renderPL === 'function') renderPL();
     if (typeof renderTx === 'function') renderTx();
-
-  } catch (err) {
-    console.error('Demo sandbox login error:', err);
+  } catch (renderErr) {
+    console.warn('UI render warning during demo switch:', renderErr);
   }
 };
   
