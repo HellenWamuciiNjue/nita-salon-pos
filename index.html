@@ -1654,25 +1654,26 @@ window.doLogin = async function(){
   }
 };
   
-// ===== DIRECT GLOBAL OVERRIDE =====
-// Force overwrite any existing global CU binding immediately
-try {
-  CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
-} catch(e) {
-  window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+// ===== FUNCTION INTERCEPTOR (Prevents getFilteredTX from crashing on null CU) =====
+if (typeof getFilteredTX === 'function' && !window._originalGetFilteredTX) {
+  window._originalGetFilteredTX = getFilteredTX;
+  window.getFilteredTX = function() {
+    if (!window.CU) {
+      window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+    }
+    try { CU = window.CU; } catch(e) {}
+    return window._originalGetFilteredTX.apply(this, arguments);
+  };
 }
 
 window.loginAsDemo = function() {
   window.isDemoMode = true;
   
-  // Directly set CU to bypass any lexical let/var shadowing
-  try {
-    CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
-  } catch(e) {
-    window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
-  }
+  // Force set global CU
+  window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+  try { CU = window.CU; } catch(e) {}
 
-  // Generate Demo Data
+  // 1. Generate Demo Data (Staff A–D, 10 days of transactions & expenses)
   const demoStaff = [
     { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
     { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
@@ -1722,18 +1723,18 @@ window.loginAsDemo = function() {
     });
   }
 
-  // Assign to all possible global array variations
-  window.staff = staff = demoStaff;
-  window.staffList = staffList = demoStaff;
-  window.transactions = transactions = demoTransactions;
-  window.transactionsList = transactionsList = demoTransactions;
-  window.expenses = expenses = demoExpenses;
-  window.expensesList = expensesList = demoExpenses;
-  window.messages = messages = [
+  // 2. Inject into global app state arrays
+  window.staff = demoStaff;
+  window.staffList = demoStaff;
+  window.transactions = demoTransactions;
+  window.transactionsList = demoTransactions;
+  window.expenses = demoExpenses;
+  window.expensesList = demoExpenses;
+  window.messages = [
     { id: 'm1', sender: 'Demo Admin', text: 'Welcome to Nita\'s Salon Demo Mode!', timestamp: '2026-10-14' }
   ];
 
-  // UI Setup
+  // 3. UI Layout Switch
   const loginScreen = document.getElementById('loginScreen');
   if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1750,7 +1751,7 @@ window.loginAsDemo = function() {
     lockAppForDemo();
   }
 
-  // Render views
+  // 4. Force render dashboard and metrics tabs
   try {
     if (typeof goPage === 'function') goPage('dashboard');
     if (typeof renderDash === 'function') renderDash();
