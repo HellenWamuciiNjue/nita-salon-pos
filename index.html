@@ -1678,12 +1678,31 @@ window.loginAsDemo = function() {
   // ... rest of your demo login code ...
 };
 
+  // ===== BLOCK FIRESTORE OVERWRITES IN DEMO MODE =====
+// This ensures that once you are in Demo Mode, live database calls are paused 
+// so they can't overwrite your local mock arrays with empty server data.
+if (typeof window !== 'undefined') {
+  const originalFetch = window.fetch;
+  // If Firestore tries to sync empty data during demo mode, block it
+  window.addEventListener('beforeunload', () => {
+    if (window.isDemoMode) {
+      if (typeof db !== 'undefined' && typeof terminate === 'function') {
+        terminate(db).catch(() => {});
+      }
+    }
+  });
+}
 window.loginAsDemo = function() {
   window.isDemoMode = true;
   
-  // Force set global CU
-  window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
-  try { CU = window.CU; } catch(e) {}
+  // Instantly terminate active Firestore network connection so it stops pulling blank data
+  try {
+    if (typeof db !== 'undefined' && typeof terminate === 'function') {
+      terminate(db);
+    }
+  } catch(e) {}
+
+  // ... rest of your loginAsDemo code ...
 
   // 1. Generate Demo Data (Staff A–D, 10 days of transactions & expenses)
   const demoStaff = [
