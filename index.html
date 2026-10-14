@@ -1654,32 +1654,25 @@ window.doLogin = async function(){
   }
 };
   
+// ===== DIRECT GLOBAL OVERRIDE =====
+// Force overwrite any existing global CU binding immediately
+try {
+  CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+} catch(e) {
+  window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+}
+
 window.loginAsDemo = function() {
-  // 1. Enable Demo Mode flag
   window.isDemoMode = true;
+  
+  // Directly set CU to bypass any lexical let/var shadowing
+  try {
+    CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+  } catch(e) {
+    window.CU = { id: 'demo-admin-01', name: 'Demo Admin', role: 'Admin', pin: '0000', isDemo: true };
+  }
 
-  // 2. Lock CU using a secure property trap so background scripts CANNOT set it to null
-  let mockUser = { 
-    id: 'demo-admin-01', 
-    name: 'Demo Admin', 
-    role: 'Admin', 
-    pin: '0000',
-    isDemo: true
-  };
-
-  Object.defineProperty(window, 'CU', {
-    get: function() { return mockUser; },
-    set: function(val) {
-      if (window.isDemoMode && (!val || !val.role)) {
-        console.warn("Blocked background script from clearing Demo User session.");
-        return; // Reject any attempt to clear CU
-      }
-      mockUser = val;
-    },
-    configurable: true
-  });
-
-  // 3. Populate Mock Data (Staff A–D, 10 days of sales, expenses)
+  // Generate Demo Data
   const demoStaff = [
     { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
     { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
@@ -1729,18 +1722,18 @@ window.loginAsDemo = function() {
     });
   }
 
-  // 4. Inject straight into global arrays
-  window.staff = demoStaff;
-  window.staffList = demoStaff;
-  window.transactions = demoTransactions;
-  window.transactionsList = demoTransactions;
-  window.expenses = demoExpenses;
-  window.expensesList = demoExpenses;
-  window.messages = [
+  // Assign to all possible global array variations
+  window.staff = staff = demoStaff;
+  window.staffList = staffList = demoStaff;
+  window.transactions = transactions = demoTransactions;
+  window.transactionsList = transactionsList = demoTransactions;
+  window.expenses = expenses = demoExpenses;
+  window.expensesList = expensesList = demoExpenses;
+  window.messages = messages = [
     { id: 'm1', sender: 'Demo Admin', text: 'Welcome to Nita\'s Salon Demo Mode!', timestamp: '2026-10-14' }
   ];
 
-  // 5. Hide Login Screen & Show App UI directly
+  // UI Setup
   const loginScreen = document.getElementById('loginScreen');
   if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1753,12 +1746,11 @@ window.loginAsDemo = function() {
   const demoBanner = document.getElementById('demo-banner');
   if (demoBanner) demoBanner.style.display = 'block';
 
-  // 6. Lock down mutation buttons for demo security
   if (typeof lockAppForDemo === 'function') {
     lockAppForDemo();
   }
 
-  // 7. Force dashboard render
+  // Render views
   try {
     if (typeof goPage === 'function') goPage('dashboard');
     if (typeof renderDash === 'function') renderDash();
@@ -1767,7 +1759,7 @@ window.loginAsDemo = function() {
     if (typeof renderPL === 'function') renderPL();
     if (typeof renderTx === 'function') renderTx();
   } catch (renderErr) {
-    console.warn('UI render warning during demo switch:', renderErr);
+    console.warn('UI render warning:', renderErr);
   }
 };
   
