@@ -1730,11 +1730,11 @@ function generateDemoDataFromRealServices() {
 }
 
 // ===== DEMO LOGIN FUNCTION =====
-// ===== DEMO LOGIN FUNCTION (SAFE MODE) =====
+// ===== DEMO LOGIN FUNCTION (WITH CU FIX) =====
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
-    // Wait for data if promises exist, otherwise skip gracefully
+    // Wait for data if promises exist
     if (typeof staffRosterReady !== 'undefined' && typeof svcMenuReady !== 'undefined') {
       await Promise.all([staffRosterReady, svcMenuReady]);
     }
@@ -1744,14 +1744,22 @@ window.loginAsDemo = async function() {
       generateDemoDataFromRealServices();
     }
 
-    // 2. Map demo data into your main app arrays safely
+    // 2. Set active demo user context (CU) so functions like buildSaleForm don't crash on CU.role
+    window.CU = { 
+      id: 'demo-admin', 
+      name: 'Demo Admin', 
+      role: 'Admin', 
+      pin: '0000' 
+    };
+
+    // 3. Map demo data into your main app arrays safely
     if (typeof staff !== 'undefined' && typeof window.demoStaff !== 'undefined') staff = window.demoStaff;
     if (typeof staffList !== 'undefined' && typeof window.demoStaff !== 'undefined') staffList = window.demoStaff;
     if (typeof transactions !== 'undefined' && typeof window.demoTx !== 'undefined') transactions = window.demoTx;
     if (typeof expenses !== 'undefined' && typeof window.demoExpenses !== 'undefined') expenses = window.demoExpenses;
     if (typeof messages !== 'undefined' && typeof window.demoMsgs !== 'undefined') messages = window.demoMsgs;
 
-    // 3. UI Setup with null-checks (prevents crashes if IDs differ)
+    // 4. UI Setup with null-checks
     const loginScreen = document.getElementById('loginScreen');
     if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1768,19 +1776,14 @@ window.loginAsDemo = async function() {
       await initApp();
     }
 
-    // Optional greeting overlay checks
-    const gEmoji = document.getElementById('gEmoji'); if (gEmoji) gEmoji.innerText = '🔍';
-    const gName = document.getElementById('gName'); if (gName) gName.innerText = 'Demo Visitor';
-    const gMsg = document.getElementById('gMsg'); if (gMsg) gMsg.innerText = 'Welcome to Nita\'s Salon POS Admin Demo!';
-    const gSub = document.getElementById('gSub'); if (gSub) gSub.innerText = 'You are viewing this system in read-only mode.';
-    const gTip = document.getElementById('gTip'); if (gTip) gTip.innerText = 'Feel free to explore the tabs and features. Saving or changing data is disabled.';
-    const greetOverlay = document.getElementById('greetOverlay'); if (greetOverlay) greetOverlay.style.display = 'flex';
+    const greetOverlay = document.getElementById('greetOverlay'); 
+    if (greetOverlay) greetOverlay.style.display = 'flex';
 
     if (typeof lockAppForDemo === 'function') {
       lockAppForDemo();
     }
 
-    // 4. Force render active dashboard tab
+    // 5. Force render active dashboard tab
     if (typeof goPage === 'function') {
       goPage('dashboard');
     }
