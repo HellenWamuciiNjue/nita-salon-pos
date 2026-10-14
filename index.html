@@ -1653,10 +1653,20 @@ window.doLogin = async function(){
     if(btn){btn.disabled=false;btn.textContent='Sign In';}
   }
 };
+  
+// ===== GLOBAL DEMO USER CONTEXT (Prevents null crashes anywhere in app) =====
+window.CU = { 
+  id: 'demo-admin-01', 
+  name: 'Demo Admin', 
+  role: 'Admin', 
+  pin: '0000' 
+};
+
+// ===== DEMO MODE LOGIN FUNCTION =====
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
-    // 1. Set Mock Current User (CU) so UI functions like buildSaleForm don't crash
+    // Ensure CU stays locked to Demo Admin
     window.CU = { 
       id: 'demo-admin-01', 
       name: 'Demo Admin', 
@@ -1664,7 +1674,7 @@ window.loginAsDemo = async function() {
       pin: '0000' 
     };
 
-    // 2. Hardcoded Mock Staff across different roles/shops
+    // 1. Hardcoded Mock Staff across different roles/shops
     const mockStaff = [
       { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
       { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
@@ -1672,7 +1682,7 @@ window.loginAsDemo = async function() {
       { id: 'ds4', name: 'Staff D', role: 'Barber', shop: 'Express Branch' }
     ];
 
-    // 3. Hardcoded Mock Services & Prices
+    // 2. Hardcoded Mock Services & Prices
     const mockServices = [
       { name: 'Blow Out', price: 1500, comm: 40 },
       { name: 'Acrylic Nails', price: 2500, comm: 35 },
@@ -1682,7 +1692,7 @@ window.loginAsDemo = async function() {
       { name: 'Gel Polish', price: 1800, comm: 30 }
     ];
 
-    // 4. Generate 10 Days of Realistic Transaction History
+    // 3. Generate 10 Days of Realistic Transaction & Expense History
     const mockTransactions = [];
     const mockExpenses = [];
     
@@ -1692,7 +1702,6 @@ window.loginAsDemo = async function() {
       d.setDate(today.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
 
-      // Create 3-4 transactions per day distributed among staff
       mockStaff.forEach((st, sIdx) => {
         const svc = mockServices[(i + sIdx) % mockServices.length];
         const amt = svc.price;
@@ -1712,7 +1721,6 @@ window.loginAsDemo = async function() {
         });
       });
 
-      // Add a daily expense item for P&L tracking
       mockExpenses.push({
         id: `EXP-DEMO-${100 + i}`,
         date: dateStr,
@@ -1723,13 +1731,12 @@ window.loginAsDemo = async function() {
       });
     }
 
-    // 5. Mock Broadcast Messages
     const mockMessages = [
       { id: 'm1', sender: 'Demo Admin', text: 'Team meeting scheduled for Monday morning at 8 AM.', timestamp: '2026-10-14' },
       { id: 'm2', sender: 'Staff A', text: 'Clients love the new treatment packages!', timestamp: '2026-10-13' }
     ];
 
-    // 6. Assign directly to global app variables (bypassing Firebase fetch)
+    // 4. Assign directly to global app state variables
     window.staff = mockStaff;
     window.staffList = mockStaff;
     window.transactions = mockTransactions;
@@ -1738,7 +1745,7 @@ window.loginAsDemo = async function() {
     window.expensesList = mockExpenses;
     window.messages = mockMessages;
 
-    // 7. Update UI Layout safely
+    // 5. Safe UI Updates
     const loginScreen = document.getElementById('loginScreen');
     if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1754,10 +1761,9 @@ window.loginAsDemo = async function() {
     const greetOverlay = document.getElementById('greetOverlay'); 
     if (greetOverlay) greetOverlay.style.display = 'flex';
 
-    // 8. Bypass standard initApp() (which triggers Firebase) and directly render UI views
     if (typeof lockAppForDemo === 'function') lockAppForDemo();
 
-    // 9. Force render all tabs so data reflects immediately
+    // 6. Force render all view tabs cleanly
     if (typeof goPage === 'function') goPage('dashboard');
     if (typeof renderDash === 'function') renderDash();
     if (typeof renderLeaderboard === 'function') renderLeaderboard();
