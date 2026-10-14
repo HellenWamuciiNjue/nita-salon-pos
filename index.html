@@ -1428,12 +1428,14 @@ import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js").then(({g
   window._storage=getStorage(fbApp);
   window._fbStorage={ref,uploadBytesResumable,getDownloadURL};
 });
-// Enable offline persistence
+// Enable offline persistence safely
 import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js").then(({enableIndexedDbPersistence})=>{
-  enableIndexedDbPersistence(db).catch(e=>{
-    if(e.code==='failed-precondition')console.warn("Offline: multiple tabs open");
-    else if(e.code==='unimplemented')console.warn("Offline: not supported in this browser");
+  enableIndexedDbPersistence(db).catch(e => {
+    // Safely log to console instead of letting it become an unhandled promise rejection
+    console.warn("Offline persistence note (safely bypassed):", e.message || e);
   });
+}).catch(err => {
+  console.warn("Firestore module import note:", err);
 });
 
 // ===== SERVICES =====
