@@ -1654,58 +1654,8 @@ window.doLogin = async function(){
   }
 };
 
-  function generateDemoDataFromRealServices() {
-  // Demo Staff Placeholders
-  window.demoStaff = [
-    { id: 'demo1', name: 'Staff A', role: 'Stylist' },
-    { id: 'demo2', name: 'Staff B', role: 'Nail Tech' },
-    { id: 'demo3', name: 'Staff C', role: 'Beautician' },
-    { id: 'demo4', name: 'Staff D', role: 'Barber' }
-  ];
-
-  // Grab existing real services array (uses svcs, services, or servicesList)
-  const realSvcs = (typeof svcs !== 'undefined' && svcs.length > 0) ? svcs : 
-                   (typeof servicesList !== 'undefined' ? servicesList : []);
-
-  window.demoTx = [];
-  
-  if (realSvcs.length > 0) {
-    const today = new Date().toISOString().split('T')[0];
-
-    window.demoStaff.forEach((staff, idx) => {
-      // Pick real services from your database
-      const svc1 = realSvcs[idx % realSvcs.length];
-      const svc2 = realSvcs[(idx + 2) % realSvcs.length];
-
-      const price1 = Number(svc1.price || svc1.amount || 1500);
-      const price2 = Number(svc2.price || svc2.amount || 2000);
-      const commPct1 = Number(svc1.comm || svc1.commission || 30) / 100;
-      const commPct2 = Number(svc2.comm || svc2.commission || 30) / 100;
-
-      window.demoTx.push({
-        id: `TX-DEMO-${100 + idx * 2 + 1}`,
-        staff: staff.name,
-        service: svc1.name || svc1.serviceName,
-        amount: price1,
-        commission: price1 * commPct1,
-        date: today,
-        status: 'Completed'
-      });
-
-      window.demoTx.push({
-        id: `TX-DEMO-${100 + idx * 2 + 2}`,
-        staff: staff.name,
-        service: svc2.name || svc2.serviceName,
-        amount: price2,
-        commission: price2 * commPct2,
-        date: today,
-        status: 'Completed'
-      });
-    });
-  }
-}
-
-  function generateDemoDataFromRealServices() {
+// ===== DEMO DATA GENERATOR =====
+function generateDemoDataFromRealServices() {
   // 1. Placeholder Staff Roster
   window.demoStaff = [
     { id: 'demo1', name: 'Staff A', role: 'Stylist', pin: '0000', active: true },
@@ -1729,7 +1679,7 @@ window.doLogin = async function(){
 
   const datesToPopulate = [todayStr, yesterdayStr];
 
-  // 3. Populate Sample Transactions across today and yesterday
+  // 3. Populate Sample Transactions across today and yesterday using real service pricing
   datesToPopulate.forEach((date) => {
     window.demoStaff.forEach((staffMember, idx) => {
       const svc1 = realSvcs.length > 0 ? realSvcs[(idx) % realSvcs.length] : { name: 'Hair Styling', price: 1500, comm: 40 };
@@ -1766,20 +1716,20 @@ window.doLogin = async function(){
     });
   });
 
-  // 4. Populate Sample Expenses (For P&L and Expenses tab)
+  // 4. Sample Expenses (For P&L and Expenses tab)
   window.demoExpenses = [
     { id: 'exp1', date: todayStr, category: 'Supplies', description: 'Salon Hair Products', amount: 3500, staff: 'Staff A' },
     { id: 'exp2', date: yesterdayStr, category: 'Utilities', description: 'Power Token Refill', amount: 2000, staff: 'Admin' }
   ];
 
-  // 5. Populate Sample Broadcast Messages
+  // 5. Sample Broadcast Messages
   window.demoMsgs = [
     { id: 'msg1', sender: 'Demo Admin', text: 'Welcome team! Great work on yesterday\'s targets 🎉', timestamp: todayStr },
     { id: 'msg2', sender: 'Staff A', text: 'Reminder: New hair color dyes delivered today.', timestamp: todayStr }
   ];
 }
-  
- // Function to handle Demo Mode Login
+
+// ===== DEMO LOGIN FUNCTION =====
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
@@ -1789,9 +1739,9 @@ window.loginAsDemo = async function() {
     generateDemoDataFromRealServices();
 
     // 2. Map demo data into your main app arrays
-    // (Adjust variable names below if your script names them slightly differently)
     if (typeof staff !== 'undefined') staff = window.demoStaff;
     if (typeof staffList !== 'undefined') staffList = window.demoStaff;
+    if (typeof staffRoster !== 'undefined') staffRoster = window.demoStaff;
 
     if (typeof txs !== 'undefined') txs = window.demoTx;
     if (typeof transactions !== 'undefined') transactions = window.demoTx;
