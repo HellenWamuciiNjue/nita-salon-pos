@@ -1705,24 +1705,111 @@ window.doLogin = async function(){
   }
 }
 
+  function generateDemoDataFromRealServices() {
+  // 1. Placeholder Staff Roster
+  window.demoStaff = [
+    { id: 'demo1', name: 'Staff A', role: 'Stylist', pin: '0000', active: true },
+    { id: 'demo2', name: 'Staff B', role: 'Nail Tech', pin: '0000', active: true },
+    { id: 'demo3', name: 'Staff C', role: 'Beautician', pin: '0000', active: true },
+    { id: 'demo4', name: 'Staff D', role: 'Barber', pin: '0000', active: true }
+  ];
+
+  // 2. Fetch Real Service Items from App Array
+  const realSvcs = (typeof svcs !== 'undefined' && svcs.length > 0) ? svcs : 
+                   (typeof servicesList !== 'undefined' ? servicesList : []);
+
+  window.demoTx = [];
+  window.demoExpenses = [];
+  window.demoMsgs = [];
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  const datesToPopulate = [todayStr, yesterdayStr];
+
+  // 3. Populate Sample Transactions across today and yesterday
+  datesToPopulate.forEach((date) => {
+    window.demoStaff.forEach((staffMember, idx) => {
+      const svc1 = realSvcs.length > 0 ? realSvcs[(idx) % realSvcs.length] : { name: 'Hair Styling', price: 1500, comm: 40 };
+      const svc2 = realSvcs.length > 0 ? realSvcs[(idx + 2) % realSvcs.length] : { name: 'Gel Application', price: 2000, comm: 30 };
+
+      const price1 = Number(svc1.price || svc1.amount || 1500);
+      const price2 = Number(svc2.price || svc2.amount || 2000);
+      const comm1 = price1 * (Number(svc1.comm || svc1.commission || 30) / 100);
+      const comm2 = price2 * (Number(svc2.comm || svc2.commission || 30) / 100);
+
+      window.demoTx.push({
+        id: `TX-DEMO-${Math.floor(Math.random() * 8999 + 1000)}`,
+        staff: staffMember.name,
+        service: svc1.name || svc1.serviceName || 'Service A',
+        amount: price1,
+        commission: comm1,
+        payMethod: idx % 2 === 0 ? 'M-Pesa' : 'Cash',
+        date: date,
+        timestamp: new Date().getTime(),
+        status: 'Completed'
+      });
+
+      window.demoTx.push({
+        id: `TX-DEMO-${Math.floor(Math.random() * 8999 + 1000)}`,
+        staff: staffMember.name,
+        service: svc2.name || svc2.serviceName || 'Service B',
+        amount: price2,
+        commission: comm2,
+        payMethod: 'M-Pesa',
+        date: date,
+        timestamp: new Date().getTime(),
+        status: 'Completed'
+      });
+    });
+  });
+
+  // 4. Populate Sample Expenses (For P&L and Expenses tab)
+  window.demoExpenses = [
+    { id: 'exp1', date: todayStr, category: 'Supplies', description: 'Salon Hair Products', amount: 3500, staff: 'Staff A' },
+    { id: 'exp2', date: yesterdayStr, category: 'Utilities', description: 'Power Token Refill', amount: 2000, staff: 'Admin' }
+  ];
+
+  // 5. Populate Sample Broadcast Messages
+  window.demoMsgs = [
+    { id: 'msg1', sender: 'Demo Admin', text: 'Welcome team! Great work on yesterday\'s targets 🎉', timestamp: todayStr },
+    { id: 'msg2', sender: 'Staff A', text: 'Reminder: New hair color dyes delivered today.', timestamp: todayStr }
+  ];
+}
+  
  // Function to handle Demo Mode Login
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
     await Promise.all([staffRosterReady, svcMenuReady]);
 
-    // 1. Generate demo transactions & data using your real services and prices
-    if (typeof generateDemoDataFromRealServices === 'function') {
-      generateDemoDataFromRealServices();
-    }
-    // Swap active app arrays to use demo placeholders safely in memory
-    if (typeof staff !== 'undefined' && typeof window.demoStaff !== 'undefined') staff = window.demoStaff;
-    if (typeof transactions !== 'undefined' && typeof window.demoTx !== 'undefined') transactions = window.demoTx;
+    // 1. Generate the dynamic demo dataset
+    generateDemoDataFromRealServices();
 
+    // 2. Map demo data into your main app arrays
+    // (Adjust variable names below if your script names them slightly differently)
+    if (typeof staff !== 'undefined') staff = window.demoStaff;
+    if (typeof staffList !== 'undefined') staffList = window.demoStaff;
+
+    if (typeof txs !== 'undefined') txs = window.demoTx;
+    if (typeof transactions !== 'undefined') transactions = window.demoTx;
+    if (typeof transactionsList !== 'undefined') transactionsList = window.demoTx;
+
+    if (typeof expenses !== 'undefined') expenses = window.demoExpenses;
+    if (typeof expensesList !== 'undefined') expensesList = window.demoExpenses;
+
+    if (typeof messages !== 'undefined') messages = window.demoMsgs;
+    if (typeof msgList !== 'undefined') msgList = window.demoMsgs;
+
+    // 3. UI Setup
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('uBadge').textContent = 'Demo Admin 👑';
     document.getElementById('demo-banner').style.display = 'block';
+
+    // 4. Initialize app & re-render active page views
     await initApp();
 
     document.getElementById('gEmoji').innerText = '🔍';
@@ -1733,6 +1820,13 @@ window.loginAsDemo = async function() {
     document.getElementById('greetOverlay').style.display = 'flex';
 
     lockAppForDemo();
+
+    // 5. Trigger view renders with demo data loaded
+    if (typeof renderDash === 'function') renderDash();
+    if (typeof renderLeaderboard === 'function') renderLeaderboard();
+    if (typeof renderCommissions === 'function') renderCommissions();
+    if (typeof renderPL === 'function') renderPL();
+
   } catch (err) {
     console.error('Demo login error:', err);
   }
