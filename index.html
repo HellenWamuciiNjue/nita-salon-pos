@@ -1654,66 +1654,62 @@ window.doLogin = async function(){
   }
 };
   
-// ===== GLOBAL DEMO USER CONTEXT (Prevents null crashes anywhere in app) =====
+// Global Mock User for Demo Mode
 window.CU = { 
   id: 'demo-admin-01', 
   name: 'Demo Admin', 
   role: 'Admin', 
-  pin: '0000' 
+  pin: '0000',
+  isDemo: true
 };
 
 // ===== DEMO MODE LOGIN FUNCTION =====
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
-    // Ensure CU stays locked to Demo Admin
+    // 1. Lock Mock User Context permanently
     window.CU = { 
       id: 'demo-admin-01', 
       name: 'Demo Admin', 
       role: 'Admin', 
-      pin: '0000' 
+      pin: '0000',
+      isDemo: true
     };
 
-    // 1. Hardcoded Mock Staff across different roles/shops
-    const mockStaff = [
+    // 2. Define Sandbox / Demo Data (Isolated from Production)
+    const demoStaff = [
       { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
       { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
       { id: 'ds3', name: 'Staff C', role: 'Beautician', shop: 'Express Branch' },
       { id: 'ds4', name: 'Staff D', role: 'Barber', shop: 'Express Branch' }
     ];
 
-    // 2. Hardcoded Mock Services & Prices
-    const mockServices = [
+    const demoServices = [
       { name: 'Blow Out', price: 1500, comm: 40 },
       { name: 'Acrylic Nails', price: 2500, comm: 35 },
       { name: 'Full Facial', price: 3500, comm: 30 },
-      { name: 'Beard Trim & Cut', price: 1200, comm: 40 },
-      { name: 'Hair Treatment', price: 2000, comm: 35 },
-      { name: 'Gel Polish', price: 1800, comm: 30 }
+      { name: 'Beard Trim & Cut', price: 1200, comm: 40 }
     ];
 
-    // 3. Generate 10 Days of Realistic Transaction & Expense History
-    const mockTransactions = [];
-    const mockExpenses = [];
-    
+    // Build 10 days of sandbox transactions
+    const demoTransactions = [];
+    const demoExpenses = [];
     const today = new Date();
+
     for (let i = 0; i < 10; i++) {
       const d = new Date();
       d.setDate(today.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
 
-      mockStaff.forEach((st, sIdx) => {
-        const svc = mockServices[(i + sIdx) % mockServices.length];
-        const amt = svc.price;
-        const commission = amt * (svc.comm / 100);
-
-        mockTransactions.push({
-          id: `TX-DEMO-${1000 + (i * 10) + sIdx}`,
+      demoStaff.forEach((st, sIdx) => {
+        const svc = demoServices[(i + sIdx) % demoServices.length];
+        demoTransactions.push({
+          id: `DEMO-TX-${1000 + (i * 10) + sIdx}`,
           staff: st.name,
           shop: st.shop,
           service: svc.name,
-          amount: amt,
-          commission: commission,
+          amount: svc.price,
+          commission: svc.price * (svc.comm / 100),
           payMethod: sIdx % 2 === 0 ? 'M-Pesa' : 'Cash',
           date: dateStr,
           timestamp: d.getTime(),
@@ -1721,31 +1717,25 @@ window.loginAsDemo = async function() {
         });
       });
 
-      mockExpenses.push({
-        id: `EXP-DEMO-${100 + i}`,
+      demoExpenses.push({
+        id: `DEMO-EXP-${100 + i}`,
         date: dateStr,
-        category: i % 2 === 0 ? 'Supplies' : 'Utilities',
-        description: i % 2 === 0 ? 'Stock refill & shampoos' : 'Daily electricity/water utility',
-        amount: 1500 + (i * 200),
+        category: 'Supplies',
+        description: 'Demo sandbox inventory restock',
+        amount: 2000,
         staff: 'Admin'
       });
     }
 
-    const mockMessages = [
-      { id: 'm1', sender: 'Demo Admin', text: 'Team meeting scheduled for Monday morning at 8 AM.', timestamp: '2026-10-14' },
-      { id: 'm2', sender: 'Staff A', text: 'Clients love the new treatment packages!', timestamp: '2026-10-13' }
-    ];
+    // 3. Inject into global variables used by getFilteredTX and render functions
+    window.staff = demoStaff;
+    window.staffList = demoStaff;
+    window.transactions = demoTransactions;
+    window.transactionsList = demoTransactions;
+    window.expenses = demoExpenses;
+    window.expensesList = demoExpenses;
 
-    // 4. Assign directly to global app state variables
-    window.staff = mockStaff;
-    window.staffList = mockStaff;
-    window.transactions = mockTransactions;
-    window.transactionsList = mockTransactions;
-    window.expenses = mockExpenses;
-    window.expensesList = mockExpenses;
-    window.messages = mockMessages;
-
-    // 5. Safe UI Updates
+    // 4. Update UI layout elements safely
     const loginScreen = document.getElementById('loginScreen');
     if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1761,19 +1751,20 @@ window.loginAsDemo = async function() {
     const greetOverlay = document.getElementById('greetOverlay'); 
     if (greetOverlay) greetOverlay.style.display = 'flex';
 
-    if (typeof lockAppForDemo === 'function') lockAppForDemo();
+    if (typeof lockAppForDemo === 'function') {
+      lockAppForDemo();
+    }
 
-    // 6. Force render all view tabs cleanly
+    // 5. Trigger standard rendering functions now that CU and datasets are populated
     if (typeof goPage === 'function') goPage('dashboard');
     if (typeof renderDash === 'function') renderDash();
     if (typeof renderLeaderboard === 'function') renderLeaderboard();
     if (typeof renderCommissions === 'function') renderCommissions();
     if (typeof renderPL === 'function') renderPL();
-    if (typeof renderExpenses === 'function') renderExpenses();
     if (typeof renderTx === 'function') renderTx();
 
   } catch (err) {
-    console.error('Demo login error:', err);
+    console.error('Demo sandbox login error:', err);
   }
 };
   
