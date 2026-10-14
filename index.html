@@ -1654,13 +1654,12 @@ window.doLogin = async function(){
   }
 };
   
-// ===== ULTIMATE BULLETPROOF DEMO LOGIN =====
 window.loginAsDemo = function() {
-  // 1. Set global flags
+  // 1. Enable Demo Mode flag
   window.isDemoMode = true;
-  
-  // 2. Lock Mock User Context permanently so any function checking CU.role finds it instantly
-  window.CU = { 
+
+  // 2. Lock CU using a secure property trap so background scripts CANNOT set it to null
+  let mockUser = { 
     id: 'demo-admin-01', 
     name: 'Demo Admin', 
     role: 'Admin', 
@@ -1668,7 +1667,19 @@ window.loginAsDemo = function() {
     isDemo: true
   };
 
-  // 3. Generate Rich Mock Data (Staff A–D, 10 days of sales, expenses)
+  Object.defineProperty(window, 'CU', {
+    get: function() { return mockUser; },
+    set: function(val) {
+      if (window.isDemoMode && (!val || !val.role)) {
+        console.warn("Blocked background script from clearing Demo User session.");
+        return; // Reject any attempt to clear CU
+      }
+      mockUser = val;
+    },
+    configurable: true
+  });
+
+  // 3. Populate Mock Data (Staff A–D, 10 days of sales, expenses)
   const demoStaff = [
     { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
     { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
@@ -1718,7 +1729,7 @@ window.loginAsDemo = function() {
     });
   }
 
-  // 4. Inject straight into global arrays so getFilteredTX and render functions read them instantly
+  // 4. Inject straight into global arrays
   window.staff = demoStaff;
   window.staffList = demoStaff;
   window.transactions = demoTransactions;
@@ -1729,7 +1740,7 @@ window.loginAsDemo = function() {
     { id: 'm1', sender: 'Demo Admin', text: 'Welcome to Nita\'s Salon Demo Mode!', timestamp: '2026-10-14' }
   ];
 
-  // 5. Hide Login Screen & Show App UI directly (No async Firebase calls!)
+  // 5. Hide Login Screen & Show App UI directly
   const loginScreen = document.getElementById('loginScreen');
   if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1747,7 +1758,7 @@ window.loginAsDemo = function() {
     lockAppForDemo();
   }
 
-  // 7. Directly trigger dashboard rendering safely
+  // 7. Force dashboard render
   try {
     if (typeof goPage === 'function') goPage('dashboard');
     if (typeof renderDash === 'function') renderDash();
