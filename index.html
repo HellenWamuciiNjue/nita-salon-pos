@@ -1730,52 +1730,60 @@ function generateDemoDataFromRealServices() {
 }
 
 // ===== DEMO LOGIN FUNCTION =====
+// ===== DEMO LOGIN FUNCTION (SAFE MODE) =====
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
-    await Promise.all([staffRosterReady, svcMenuReady]);
+    // Wait for data if promises exist, otherwise skip gracefully
+    if (typeof staffRosterReady !== 'undefined' && typeof svcMenuReady !== 'undefined') {
+      await Promise.all([staffRosterReady, svcMenuReady]);
+    }
 
     // 1. Generate the dynamic demo dataset
-    generateDemoDataFromRealServices();
+    if (typeof generateDemoDataFromRealServices === 'function') {
+      generateDemoDataFromRealServices();
+    }
 
-    // 2. Map demo data into your main app arrays
-    if (typeof staff !== 'undefined') staff = window.demoStaff;
-    if (typeof staffList !== 'undefined') staffList = window.demoStaff;
-    if (typeof staffRoster !== 'undefined') staffRoster = window.demoStaff;
+    // 2. Map demo data into your main app arrays safely
+    if (typeof staff !== 'undefined' && typeof window.demoStaff !== 'undefined') staff = window.demoStaff;
+    if (typeof staffList !== 'undefined' && typeof window.demoStaff !== 'undefined') staffList = window.demoStaff;
+    if (typeof transactions !== 'undefined' && typeof window.demoTx !== 'undefined') transactions = window.demoTx;
+    if (typeof expenses !== 'undefined' && typeof window.demoExpenses !== 'undefined') expenses = window.demoExpenses;
+    if (typeof messages !== 'undefined' && typeof window.demoMsgs !== 'undefined') messages = window.demoMsgs;
 
-    if (typeof txs !== 'undefined') txs = window.demoTx;
-    if (typeof transactions !== 'undefined') transactions = window.demoTx;
-    if (typeof transactionsList !== 'undefined') transactionsList = window.demoTx;
+    // 3. UI Setup with null-checks (prevents crashes if IDs differ)
+    const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen) loginScreen.style.display = 'none';
 
-    if (typeof expenses !== 'undefined') expenses = window.demoExpenses;
-    if (typeof expensesList !== 'undefined') expensesList = window.demoExpenses;
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.style.display = 'flex';
 
-    if (typeof messages !== 'undefined') messages = window.demoMsgs;
-    if (typeof msgList !== 'undefined') msgList = window.demoMsgs;
+    const uBadge = document.getElementById('uBadge');
+    if (uBadge) uBadge.textContent = 'Demo Admin 👑';
 
-    // 3. UI Setup
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('uBadge').textContent = 'Demo Admin 👑';
-    document.getElementById('demo-banner').style.display = 'block';
+    const demoBanner = document.getElementById('demo-banner');
+    if (demoBanner) demoBanner.style.display = 'block';
 
-    // 4. Initialize app & re-render active page views
-    await initApp();
+    if (typeof initApp === 'function') {
+      await initApp();
+    }
 
-    document.getElementById('gEmoji').innerText = '🔍';
-    document.getElementById('gName').innerText = 'Demo Visitor';
-    document.getElementById('gMsg').innerText = 'Welcome to Nita\'s Salon POS Admin Demo!';
-    document.getElementById('gSub').innerText = 'You are viewing this system in read-only mode.';
-    document.getElementById('gTip').innerText = 'Feel free to explore the tabs and features. Saving or changing data is disabled.';
-    document.getElementById('greetOverlay').style.display = 'flex';
+    // Optional greeting overlay checks
+    const gEmoji = document.getElementById('gEmoji'); if (gEmoji) gEmoji.innerText = '🔍';
+    const gName = document.getElementById('gName'); if (gName) gName.innerText = 'Demo Visitor';
+    const gMsg = document.getElementById('gMsg'); if (gMsg) gMsg.innerText = 'Welcome to Nita\'s Salon POS Admin Demo!';
+    const gSub = document.getElementById('gSub'); if (gSub) gSub.innerText = 'You are viewing this system in read-only mode.';
+    const gTip = document.getElementById('gTip'); if (gTip) gTip.innerText = 'Feel free to explore the tabs and features. Saving or changing data is disabled.';
+    const greetOverlay = document.getElementById('greetOverlay'); if (greetOverlay) greetOverlay.style.display = 'flex';
 
-    lockAppForDemo();
+    if (typeof lockAppForDemo === 'function') {
+      lockAppForDemo();
+    }
 
-    // 5. Trigger view renders with demo data loaded
-    if (typeof renderDash === 'function') renderDash();
-    if (typeof renderLeaderboard === 'function') renderLeaderboard();
-    if (typeof renderCommissions === 'function') renderCommissions();
-    if (typeof renderPL === 'function') renderPL();
+    // 4. Force render active dashboard tab
+    if (typeof goPage === 'function') {
+      goPage('dashboard');
+    }
 
   } catch (err) {
     console.error('Demo login error:', err);
