@@ -1653,113 +1653,92 @@ window.doLogin = async function(){
     if(btn){btn.disabled=false;btn.textContent='Sign In';}
   }
 };
-
-// ===== DEMO DATA GENERATOR =====
-function generateDemoDataFromRealServices() {
-  // 1. Placeholder Staff Roster
-  window.demoStaff = [
-    { id: 'demo1', name: 'Staff A', role: 'Stylist', pin: '0000', active: true },
-    { id: 'demo2', name: 'Staff B', role: 'Nail Tech', pin: '0000', active: true },
-    { id: 'demo3', name: 'Staff C', role: 'Beautician', pin: '0000', active: true },
-    { id: 'demo4', name: 'Staff D', role: 'Barber', pin: '0000', active: true }
-  ];
-
-  // 2. Fetch Real Service Items from App Array
-  const realSvcs = (typeof svcs !== 'undefined' && svcs.length > 0) ? svcs : 
-                   (typeof servicesList !== 'undefined' ? servicesList : []);
-
-  window.demoTx = [];
-  window.demoExpenses = [];
-  window.demoMsgs = [];
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-  const datesToPopulate = [todayStr, yesterdayStr];
-
-  // 3. Populate Sample Transactions across today and yesterday using real service pricing
-  datesToPopulate.forEach((date) => {
-    window.demoStaff.forEach((staffMember, idx) => {
-      const svc1 = realSvcs.length > 0 ? realSvcs[(idx) % realSvcs.length] : { name: 'Hair Styling', price: 1500, comm: 40 };
-      const svc2 = realSvcs.length > 0 ? realSvcs[(idx + 2) % realSvcs.length] : { name: 'Gel Application', price: 2000, comm: 30 };
-
-      const price1 = Number(svc1.price || svc1.amount || 1500);
-      const price2 = Number(svc2.price || svc2.amount || 2000);
-      const comm1 = price1 * (Number(svc1.comm || svc1.commission || 30) / 100);
-      const comm2 = price2 * (Number(svc2.comm || svc2.commission || 30) / 100);
-
-      window.demoTx.push({
-        id: `TX-DEMO-${Math.floor(Math.random() * 8999 + 1000)}`,
-        staff: staffMember.name,
-        service: svc1.name || svc1.serviceName || 'Service A',
-        amount: price1,
-        commission: comm1,
-        payMethod: idx % 2 === 0 ? 'M-Pesa' : 'Cash',
-        date: date,
-        timestamp: new Date().getTime(),
-        status: 'Completed'
-      });
-
-      window.demoTx.push({
-        id: `TX-DEMO-${Math.floor(Math.random() * 8999 + 1000)}`,
-        staff: staffMember.name,
-        service: svc2.name || svc2.serviceName || 'Service B',
-        amount: price2,
-        commission: comm2,
-        payMethod: 'M-Pesa',
-        date: date,
-        timestamp: new Date().getTime(),
-        status: 'Completed'
-      });
-    });
-  });
-
-  // 4. Sample Expenses (For P&L and Expenses tab)
-  window.demoExpenses = [
-    { id: 'exp1', date: todayStr, category: 'Supplies', description: 'Salon Hair Products', amount: 3500, staff: 'Staff A' },
-    { id: 'exp2', date: yesterdayStr, category: 'Utilities', description: 'Power Token Refill', amount: 2000, staff: 'Admin' }
-  ];
-
-  // 5. Sample Broadcast Messages
-  window.demoMsgs = [
-    { id: 'msg1', sender: 'Demo Admin', text: 'Welcome team! Great work on yesterday\'s targets 🎉', timestamp: todayStr },
-    { id: 'msg2', sender: 'Staff A', text: 'Reminder: New hair color dyes delivered today.', timestamp: todayStr }
-  ];
-}
-
-// ===== DEMO LOGIN FUNCTION =====
-// ===== DEMO LOGIN FUNCTION (WITH CU FIX) =====
 window.loginAsDemo = async function() {
   window.isDemoMode = true;
   try {
-    // Wait for data if promises exist
-    if (typeof staffRosterReady !== 'undefined' && typeof svcMenuReady !== 'undefined') {
-      await Promise.all([staffRosterReady, svcMenuReady]);
-    }
-
-    // 1. Generate the dynamic demo dataset
-    if (typeof generateDemoDataFromRealServices === 'function') {
-      generateDemoDataFromRealServices();
-    }
-
-    // 2. Set active demo user context (CU) so functions like buildSaleForm don't crash on CU.role
+    // 1. Set Mock Current User (CU) so UI functions like buildSaleForm don't crash
     window.CU = { 
-      id: 'demo-admin', 
+      id: 'demo-admin-01', 
       name: 'Demo Admin', 
       role: 'Admin', 
       pin: '0000' 
     };
 
-    // 3. Map demo data into your main app arrays safely
-    if (typeof staff !== 'undefined' && typeof window.demoStaff !== 'undefined') staff = window.demoStaff;
-    if (typeof staffList !== 'undefined' && typeof window.demoStaff !== 'undefined') staffList = window.demoStaff;
-    if (typeof transactions !== 'undefined' && typeof window.demoTx !== 'undefined') transactions = window.demoTx;
-    if (typeof expenses !== 'undefined' && typeof window.demoExpenses !== 'undefined') expenses = window.demoExpenses;
-    if (typeof messages !== 'undefined' && typeof window.demoMsgs !== 'undefined') messages = window.demoMsgs;
+    // 2. Hardcoded Mock Staff across different roles/shops
+    const mockStaff = [
+      { id: 'ds1', name: 'Staff A', role: 'Stylist', shop: 'Main Branch' },
+      { id: 'ds2', name: 'Staff B', role: 'Nail Tech', shop: 'Main Branch' },
+      { id: 'ds3', name: 'Staff C', role: 'Beautician', shop: 'Express Branch' },
+      { id: 'ds4', name: 'Staff D', role: 'Barber', shop: 'Express Branch' }
+    ];
 
-    // 4. UI Setup with null-checks
+    // 3. Hardcoded Mock Services & Prices
+    const mockServices = [
+      { name: 'Blow Out', price: 1500, comm: 40 },
+      { name: 'Acrylic Nails', price: 2500, comm: 35 },
+      { name: 'Full Facial', price: 3500, comm: 30 },
+      { name: 'Beard Trim & Cut', price: 1200, comm: 40 },
+      { name: 'Hair Treatment', price: 2000, comm: 35 },
+      { name: 'Gel Polish', price: 1800, comm: 30 }
+    ];
+
+    // 4. Generate 10 Days of Realistic Transaction History
+    const mockTransactions = [];
+    const mockExpenses = [];
+    
+    const today = new Date();
+    for (let i = 0; i < 10; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+
+      // Create 3-4 transactions per day distributed among staff
+      mockStaff.forEach((st, sIdx) => {
+        const svc = mockServices[(i + sIdx) % mockServices.length];
+        const amt = svc.price;
+        const commission = amt * (svc.comm / 100);
+
+        mockTransactions.push({
+          id: `TX-DEMO-${1000 + (i * 10) + sIdx}`,
+          staff: st.name,
+          shop: st.shop,
+          service: svc.name,
+          amount: amt,
+          commission: commission,
+          payMethod: sIdx % 2 === 0 ? 'M-Pesa' : 'Cash',
+          date: dateStr,
+          timestamp: d.getTime(),
+          status: 'Completed'
+        });
+      });
+
+      // Add a daily expense item for P&L tracking
+      mockExpenses.push({
+        id: `EXP-DEMO-${100 + i}`,
+        date: dateStr,
+        category: i % 2 === 0 ? 'Supplies' : 'Utilities',
+        description: i % 2 === 0 ? 'Stock refill & shampoos' : 'Daily electricity/water utility',
+        amount: 1500 + (i * 200),
+        staff: 'Admin'
+      });
+    }
+
+    // 5. Mock Broadcast Messages
+    const mockMessages = [
+      { id: 'm1', sender: 'Demo Admin', text: 'Team meeting scheduled for Monday morning at 8 AM.', timestamp: '2026-10-14' },
+      { id: 'm2', sender: 'Staff A', text: 'Clients love the new treatment packages!', timestamp: '2026-10-13' }
+    ];
+
+    // 6. Assign directly to global app variables (bypassing Firebase fetch)
+    window.staff = mockStaff;
+    window.staffList = mockStaff;
+    window.transactions = mockTransactions;
+    window.transactionsList = mockTransactions;
+    window.expenses = mockExpenses;
+    window.expensesList = mockExpenses;
+    window.messages = mockMessages;
+
+    // 7. Update UI Layout safely
     const loginScreen = document.getElementById('loginScreen');
     if (loginScreen) loginScreen.style.display = 'none';
 
@@ -1772,21 +1751,20 @@ window.loginAsDemo = async function() {
     const demoBanner = document.getElementById('demo-banner');
     if (demoBanner) demoBanner.style.display = 'block';
 
-    if (typeof initApp === 'function') {
-      await initApp();
-    }
-
     const greetOverlay = document.getElementById('greetOverlay'); 
     if (greetOverlay) greetOverlay.style.display = 'flex';
 
-    if (typeof lockAppForDemo === 'function') {
-      lockAppForDemo();
-    }
+    // 8. Bypass standard initApp() (which triggers Firebase) and directly render UI views
+    if (typeof lockAppForDemo === 'function') lockAppForDemo();
 
-    // 5. Force render active dashboard tab
-    if (typeof goPage === 'function') {
-      goPage('dashboard');
-    }
+    // 9. Force render all tabs so data reflects immediately
+    if (typeof goPage === 'function') goPage('dashboard');
+    if (typeof renderDash === 'function') renderDash();
+    if (typeof renderLeaderboard === 'function') renderLeaderboard();
+    if (typeof renderCommissions === 'function') renderCommissions();
+    if (typeof renderPL === 'function') renderPL();
+    if (typeof renderExpenses === 'function') renderExpenses();
+    if (typeof renderTx === 'function') renderTx();
 
   } catch (err) {
     console.error('Demo login error:', err);
