@@ -1,0 +1,259 @@
+// ============================================================
+//  content.js — everything the team READS in "My Space".
+//  Edit freely: add, remove or reword entries. No logic lives here.
+//  Scripture quotes are from the King James Version (public domain).
+// ============================================================
+
+// ---------- DAILY WORD (short sermons) ----------
+// Each person gets a different one each day (picked from their name + the date).
+export const DAILY_WORDS = [
+  {
+    id: 'small-things', theme: 'Honesty', title: 'Small things, big trust',
+    ref: 'Luke 16:10', verse: 'He that is faithful in that which is least is faithful also in much.',
+    body: "Nobody is trusted with big things overnight. They are trusted with small things first, over and over. Entering the right price. Recording the sale. Telling the truth when a lie would be easier. A good reputation is not built on the day everyone is watching. It is built in the quiet moments nobody sees. Those small, honest choices are how you become the person people hand big things to.",
+    challenge: 'Make every entry today exactly true, even the tiny ones.'
+  },
+  {
+    id: 'walk-steady', theme: 'Integrity', title: 'Walking steady',
+    ref: 'Proverbs 10:9', verse: 'He that walketh uprightly walketh surely.',
+    body: "Integrity is not about being perfect. It is about having nothing to hide. When your hands are clean and your records match reality, you sleep well and walk with your head up. A person who has to remember which story they told to whom is always tired. The truth is lighter to carry. Choose the lighter load today.",
+    challenge: 'Do one thing today exactly as if your whole family were watching.'
+  },
+  {
+    id: 'better-doors', theme: 'Honest work', title: 'Better doors',
+    ref: 'Ephesians 4:28', verse: 'Let him that stole steal no more: but rather let him labour.',
+    body: "Pressure is real: rent, school fees, a family waiting on you. But notice a pattern. Taking what is not ours never fixes the pressure. It only adds a second one: the fear of being found out. The way through is to bring the need into the light. Ask for an advance. Tell a trusted friend. Put your energy into the work that pays. Doors that open honestly stay open.",
+    challenge: 'If money feels tight, tell one trusted person today. You can also use the Talk it out space.'
+  },
+  {
+    id: 'good-name', theme: 'Reputation', title: 'The name you carry',
+    ref: 'Proverbs 22:1', verse: 'A good name is rather to be chosen than great riches.',
+    body: "In the beauty business, word travels fast. Clients refer the stylist they trust, and they quietly stop referring the one they don't. Money taken or shortcuts used today are gone in a week, but a name you protect keeps feeding you for years. Guard it like your most valuable tool, because it is.",
+    challenge: 'Decide what you want clients to say about you when you leave the room, then act like it today.'
+  },
+  {
+    id: 'heartily', theme: 'Excellence', title: 'Do it heartily',
+    ref: 'Colossians 3:23', verse: 'Whatsoever ye do, do it heartily, as to the Lord.',
+    body: "Some days the work feels small: another wash, another set of lines, another client who is hard to please. But the person in your chair is carrying their own week, and for an hour you get to make them feel seen. That is not small. Bring your full attention, your best hands and a real smile. Excellence done in private becomes the thing everyone talks about in public.",
+    challenge: 'Give your very first client of the day your full, unhurried attention.'
+  },
+  {
+    id: 'enough', theme: 'Contentment', title: 'Peace while you grow',
+    ref: 'Hebrews 13:5', verse: 'Be content with such things as ye have.',
+    body: "Social media makes everyone else's life look finished and yours look behind. Contentment does not mean you stop dreaming. It means you stop letting comparison steal today's joy. You can be grateful for what you have and still working toward more. Peace and ambition can live in the same heart.",
+    challenge: 'Before your first client, name three things you are thankful for.'
+  },
+  {
+    id: 'expected-end', theme: 'Hope', title: 'This season is not the whole story',
+    ref: 'Jeremiah 29:11', verse: 'Thoughts of peace, and not of evil.',
+    body: "A slow week, a hard month, a difficult home season: none of it is the end of your story. Seasons change. The farmer plants long before the harvest and trusts the process. Keep showing up, keep your hands honest and your heart open. What looks like a delay may be preparation for something better than you asked for.",
+    challenge: 'Name one thing you are hoping for, and one small step you can take toward it today.'
+  },
+  {
+    id: 'heavy-laden', theme: 'Rest', title: 'You are allowed to be tired',
+    ref: 'Matthew 11:28', verse: 'Come unto me, all ye that labour and are heavy laden.',
+    body: "Strong people get tired too. Carrying everything alone is not strength, it is just heavy. Some things you can do something about today. Some things you simply have to hand over: to God, to a friend, to a person who can help. Rest is not laziness. It is how you stay able to keep going.",
+    challenge: 'Take two minutes. Breathe slowly, and say out loud the one thing weighing on you most.'
+  },
+  {
+    id: 'fear-not', theme: 'Courage', title: 'Courage to ask',
+    ref: 'Isaiah 41:10', verse: 'Fear thou not; for I am with thee.',
+    body: "Courage is not only for big moments. Sometimes it is asking for help when pride says stay quiet. Sometimes it is admitting a mistake before someone else finds it. Sometimes it is starting again after a bad week. Whatever you are afraid to say or do today, you are not facing it alone.",
+    challenge: 'Do one brave, honest thing today that you have been putting off.'
+  },
+  {
+    id: 'forgive', theme: 'Forgiveness', title: 'Put the grudge down',
+    ref: 'Ephesians 4:32', verse: 'Forgiving one another, even as God for Christ\'s sake hath forgiven you.',
+    body: "A grudge is a bag of stones you carry for someone who has already moved on. In a busy salon, little offences pile up: a borrowed product, a client taken, a careless word. Forgiving does not mean pretending it didn't hurt. It means refusing to let it live in you rent-free. Your team is stronger when peace is the default.",
+    challenge: 'Greet someone you have been cold with. Start small: a smile, a hello.'
+  },
+  {
+    id: 'worth', theme: 'Identity', title: 'You are more than your numbers',
+    ref: 'Psalm 139:14', verse: 'I am fearfully and wonderfully made.',
+    body: "A quiet day does not make you less talented. A big day does not make you more valuable. Your worth was settled long before you clocked in. Work hard, learn, grow, but never let a day's takings tell you who you are.",
+    challenge: 'Say one kind thing to yourself today, the way you would say it to a friend.'
+  },
+  {
+    id: 'cast-care', theme: 'Anxiety', title: 'Hand it over',
+    ref: '1 Peter 5:7', verse: 'Casting all your care upon him; for he careth for you.',
+    body: "Worry is like a rocking chair: it keeps you busy but takes you nowhere. Some of what keeps you awake at night you cannot control. Write it down, say it out loud, pray about it, or tell someone. Then do the one small thing that is in your hands today and leave the rest.",
+    challenge: 'Write down your top worry, then write the one small action you can take about it.'
+  },
+  {
+    id: 'give', theme: 'Generosity', title: 'Be someone\'s good day',
+    ref: 'Acts 20:35', verse: 'It is more blessed to give than to receive.',
+    body: "You do not need extra money to be generous. You can share a tip with a junior colleague, cover for someone who is stuck, or just listen properly. Generosity has a way of coming back around, often when you need it most. A team that gives to each other is a team clients want to return to.",
+    challenge: 'Do one unexpected kind thing for a teammate today.'
+  },
+  {
+    id: 'not-weary', theme: 'Perseverance', title: 'Keep going',
+    ref: 'Galatians 6:9', verse: 'Let us not be weary in well doing.',
+    body: "Building a loyal client base is slow. Learning a new style is slow. Saving is slow. But slow is not the same as stuck. Every honest day is a brick in something you can't fully see yet. Do not quit in the middle of a harvest you haven't met yet.",
+    challenge: 'Pick one skill or habit and invest 15 focused minutes in it today.'
+  },
+  {
+    id: 'two-better', theme: 'Teamwork', title: 'Better together',
+    ref: 'Ecclesiastes 4:9', verse: 'Two are better than one.',
+    body: "A salon is not a place where one star carries everything. It is a team of people who cover each other, learn from each other and celebrate each other. When one person wins, the whole room gets stronger. When someone is struggling, the whole room can lift them. Be the kind of teammate you would want on a hard day.",
+    challenge: 'Celebrate someone else\'s good work out loud today.'
+  },
+  {
+    id: 'commit-works', theme: 'Purpose', title: 'Your work matters',
+    ref: 'Proverbs 16:3', verse: 'Commit thy works unto the LORD, and thy thoughts shall be established.',
+    body: "People walk into this place tired, unsure, sometimes hurting, and walk out standing taller. That is not a small thing. Before the day starts, dedicate it: your hands, your words, your attitude. Work done with purpose feels different from work done just to get through the day.",
+    challenge: 'Say a short prayer or intention before your first client.'
+  },
+  {
+    id: 'deal-truly', theme: 'Truthfulness', title: 'Say it straight',
+    ref: 'Proverbs 12:22', verse: 'They that deal truly are his delight.',
+    body: "Truthfulness is more than not lying. It is saying the right price, the real time, the actual reason. It is owning mistakes quickly and not hiding behind half-truths. People who deal truly build relationships that survive hard seasons, because nobody has to wonder what is really going on.",
+    challenge: 'Own up to one small thing today before anyone has to ask.'
+  },
+  {
+    id: 'plan-ahead', theme: 'Wisdom with money', title: 'Pay yourself first',
+    ref: 'Proverbs 21:5', verse: 'The thoughts of the diligent tend only to plenteousness.',
+    body: "Money stress shrinks when you have even a small cushion. You do not need a lot. Setting aside a little every single day, even Ksh 50, builds a buffer that makes emergencies less frightening and bad decisions less tempting. Plan small, stay consistent, and let time do the heavy lifting.",
+    challenge: 'Set aside a small amount before you spend on anything else today.'
+  }
+];
+
+// ---------- ENCOURAGEMENT LINES ----------
+// Short lines mixed into the Boost banner. They reinforce honesty without lecturing.
+export const BOOST_LINES = {
+  any: [
+    "Every honest entry you make builds the kind of trust money can't buy.",
+    "Clients can feel when you care. Care loudly today.",
+    "You're not just doing hair and nails. You're helping people feel like themselves again.",
+    "Straight records, steady heart. That's how reputations are built.",
+    "Your name is your best asset. Keep it spotless.",
+    "People remember how you made them feel. Make it good.",
+    "Small, honest steps beat big, shaky ones every time.",
+    "Today is a clean page. Write something you'll be proud of."
+  ],
+  quiet: [
+    "Quiet days are for building: reach out to past clients, tidy your station, sharpen one skill.",
+    "A slow day is not a bad day. It is room to prepare for the busy one."
+  ],
+  return: [
+    "Good to see you back. The team missed your energy.",
+    "Welcome back! Ease into it. One client at a time."
+  ],
+  offday: [
+    "Give today your best, then rest fully on your off day. You've earned it.",
+    "Your off day is coming. Finish strong, then recharge properly."
+  ],
+  good: [
+    "You've been showing up and it shows. Keep that rhythm going.",
+    "Consistency like yours is rare. Be proud of it."
+  ]
+};
+
+// ---------- BUDDY (guided check-in) ----------
+export const MOODS = [
+  { k: 5, e: '😄', l: 'Great' },
+  { k: 4, e: '🙂', l: 'Okay' },
+  { k: 3, e: '😐', l: 'Meh' },
+  { k: 2, e: '😔', l: 'Heavy' },
+  { k: 1, e: '😣', l: 'Struggling' }
+];
+
+export const TOPICS = [
+  { k: 'home',   e: '🏠', l: 'Home & family' },
+  { k: 'money',  e: '💸', l: 'Money' },
+  { k: 'health', e: '🩺', l: 'Health' },
+  { k: 'work',   e: '💼', l: 'Work & team' },
+  { k: 'faith',  e: '🙏', l: 'Faith & purpose' },
+  { k: 'other',  e: '💭', l: 'Something else' }
+];
+
+export const HELP_TYPES = [
+  { k: 'listen',  l: 'Someone to talk to' },
+  { k: 'money',   l: 'Financial help or an advance' },
+  { k: 'timeoff', l: 'Time off or schedule change' },
+  { k: 'advice',  l: 'Advice or guidance' },
+  { k: 'prayer',  l: 'Prayer' },
+  { k: 'unsure',  l: 'Not sure yet' }
+];
+
+export const URGENCY = [
+  { k: 'normal', l: 'No rush' },
+  { k: 'soon',   l: 'Soon please' },
+  { k: 'urgent', l: 'It is urgent' }
+];
+
+// What Buddy says once someone names a topic
+export const TOPIC_OPEN = {
+  home:   "Home can follow us to work, and carrying it quietly is exhausting. I'm listening. What's going on?",
+  money:  "Money pressure is one of the heaviest things to carry, and many people go through it quietly. You're not the only one. What's happening?",
+  health: "Thank you for saying that. Your health comes first. What's been going on?",
+  work:   "Work stuff can really wear on you. Tell me what's been happening.",
+  faith:  "That's a meaningful thing to bring up. What's on your heart?",
+  other:  "Go ahead, I'm listening. What's on your mind?"
+};
+
+// Gentle, practical ideas per topic
+export const TOPIC_TIPS = {
+  home: [
+    "Say it out loud to one person you trust. Things shrink when they're shared.",
+    "Pick one small thing at home you can actually influence this week, and start there.",
+    "If you ever feel unsafe, that comes before everything else."
+  ],
+  money: [
+    "Write down your top three must-pay needs. A clear list calms a racing mind.",
+    "Talk to someone early about a possible advance or a payment plan. Honest conversations open doors that quiet panic never does.",
+    "Be careful with quick-loan apps. They often make a small problem much bigger.",
+    "Try setting aside even Ksh 50 a day. A small cushion makes everything feel less scary."
+  ],
+  health: [
+    "Please don't ignore it. A clinic visit now is easier than a crisis later.",
+    "Rest, water and real meals matter more than we admit when we're busy.",
+    "If you need time to see a doctor, ask. That's a normal, reasonable request."
+  ],
+  work: [
+    "Write down exactly what happened and what you'd like to change. It clears your head.",
+    "If it's with a teammate, a calm one-on-one usually works better than silence.",
+    "Pick one thing you control and focus there."
+  ],
+  faith: [
+    "Take two quiet minutes before your first client. Breathe, and say what's on your heart.",
+    "Open today's Word in My Space. Sometimes one verse is exactly what you needed.",
+    "Talk with someone whose faith you respect. You don't have to figure it out alone."
+  ],
+  other: [
+    "Naming how you feel is a real step. You just did it.",
+    "Choose one small kind thing to do for yourself today.",
+    "Talking to a real person can help. You can choose to share this below."
+  ]
+};
+
+export const PRAYERS = {
+  default: "Lord, thank You for today. Give me strength for the work, honesty in my hands and peace in my heart. Carry what I can't carry. Open the right doors and help me walk through them with integrity. Amen.",
+  money:   "Lord, You see my needs before I say them. Provide for me and my family. Keep me honest and wise with every shilling, and open honest doors. Give me peace in the waiting. Amen.",
+  home:    "Lord, cover my home and the people I love. Bring peace where there is tension and healing where there is hurt. Give me strength to be present at work today. Amen.",
+  health:  "Lord, I bring my body and my health to You. Give me healing, rest and the wisdom to take care of myself. Amen."
+};
+
+// ---------- SAFETY ----------
+// Verified against Kenyan sources. Befrienders Kenya is not 24/7.
+export const HELPLINES = {
+  crisis: [
+    { name: 'Kenya Red Cross (free, counselling)', num: '1199' },
+    { name: 'Befrienders Kenya (emotional support)', num: '+254 722 178 177' },
+    { name: 'Emergency (police, ambulance)', num: '999' }
+  ],
+  gbv: [
+    { name: 'National GBV helpline (free, 24/7)', num: '1195' },
+    { name: 'Gender Violence Recovery Centre (free)', num: '0800 720 565' }
+  ],
+  substance: [
+    { name: 'NACADA helpline (free)', num: '1192' }
+  ]
+};
+
+// Words that switch Buddy into "safety first" mode
+export const RX = {
+  crisis: /(kill myself|end my life|suicid|don'?t want to live|do not want to live|want to die|better off dead|hurt myself|self.?harm|no reason to live|give up on life)/i,
+  gbv: /(beats? me|beating me|hits? me|abus(e|ed|ing)|violen(t|ce)|rape|raped|molest|forced me|threaten(s|ed)? me)/i,
+  substance: /(alcohol|drunk|drinking too much|drugs|bhang|addict)/i,
+  tempted: /(steal|stole|stealing|take (the )?money|took (the )?money|from the till|borrow(ed)? from the (till|salon)|tempted to take)/i
+};
