@@ -1,0 +1,587 @@
+// ============================================================
+//  care.js — "My Space" for staff + "Care Inbox" for the manager
+//
+//  PRIVACY MODEL (important, and shown to staff on screen):
+//   • The Buddy chat is automated and private. NOTHING typed there is saved.
+//   • Something only reaches the manager if the staff member taps
+//     "Send to my manager" after seeing exactly what will be sent.
+//   • Shared requests are stored in a NEW Firestore collection:
+//     `supportRequests`. Existing collections are never touched.
+// ============================================================
+import { collection, addDoc, updateDoc, doc, onSnapshot, query, where }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  DAILY_WORDS, BOOST_LINES, MOODS, TOPICS, HELP_TYPES, URGENCY,
+  TOPIC_OPEN, TOPIC_TIPS, PRAYERS, HELPLINES, RX
+} from './content.js';
+
+let ctx = null;
+let REQS = [];
+let unsubReqs = null;
+let wordShift = 0;
+let bannerHidden = false;
+let inboxFilter = 'open';
+let B = null;          // buddy conversation state (memory only)
+let buddyBusy = false;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const dayStr = off => { const d = new Date(); d.setDate(d.getDate() + off); return d.toISOString().split('T')[0]; };
+const firstName = n => (n || '').trim().split(/\s+/)[0] || 'friend';
+const fmtKsh = n => 'Ksh ' + Math.round(n || 0).toLocaleString();
+const liveTx = (arr, name) => arr.filter(t => ctx.norm(t.staff) === ctx.norm(name) && t.status !== 'DELETED' && t.status !== 'VOID');
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + ' min ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' h ago';
+  const d = Math.floor(h / 24);
+  return d === 1 ? 'yesterday' : d + ' days ago';
+}
+
+// ------------------------------------------------------------
+//  INIT / LISTENERS
+// ------------------------------------------------------------
+export function initCare(context) { ctx = context; }
+
+export function startCare() {
+  stopCare();
+  const CU = ctx.getCU();
+  if (!CU) return;
+  try {
+    const q = CU.role === 'admin'
+      ? collection(ctx.db, 'supportRequests')
+      : query(collection(ctx.db, 'supportRequests'), where('staff', '==', CU.name)); // staff only download their OWN requests
+    unsubReqs = onSnapshot(q, snap => {
+      REQS = [];
+      snap.forEach(d => REQS.push({ ...d.data(), id: d.id }));
+      REQS.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      updateBadges();
+      renderBanner();
+      const active = document.querySelector('.page.active')?.id;
+      if (active === 'page-careInbox') renderCareInbox();
+      if (active === 'page-mySpace') renderRequestsList();
+    }, err => console.warn('supportRequests listener:', err.message));
+  } catch (e) { console.warn('Care listener failed', e); }
+}
+
+export function stopCare() {
+  if (unsubReqs) { try { unsubReqs(); } catch (e) { } unsubReqs = null; }
+  REQS = []; B = null; bannerHidden = false; wordShift = 0; buddyBusy = false;
+  // Wipe anything on screen so the next person on a shared phone never sees it
+  ['boostBanner', 'msHero', 'msWord', 'msBuddy', 'msRequests', 'careList', 'careFilters'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = ''; });
+}
+
+function updateBadges() {
+  const CU = ctx.getCU(); if (!CU) return;
+  const n = CU.role === 'admin'
+    ? REQS.filter(r => r.status === 'new').length
+    : REQS.filter(r => r.adminReply && !r.replySeen).length;
+  document.querySelectorAll('[data-care-badge]').forEach(el => {
+    el.textContent = n > 0 ? n : '';
+    el.style.display = n > 0 ? 'inline-flex' : 'none';
+  });
+}
+
+// ------------------------------------------------------------
+//  PERSONAL DATA (everything is specific to the logged-in person)
+// ------------------------------------------------------------
+function personal() {
+  const CU = ctx.getCU(), TX = ctx.getTX(), SALES = ctx.getSales();
+  const name = CU.name;
+  const my = liveTx(TX, name);
+  const td = ctx.todayStr();
+  const yd = dayStr(-1), d2 = dayStr(-2), tm = dayStr(1);
+  const comm = arr => arr.reduce((a, t) => a + (t.commission || 0), 0);
+  const ydC = comm(my.filter(t => t.date === yd));
+  const monthC = comm(my.filter(t => t.date && t.date.startsWith(td.substring(0, 7))));
+  const wkStart = new Date(); wkStart.setDate(wkStart.getDate() - wkStart.getDay());
+  const wkStr = wkStart.toISOString().split('T')[0];
+  const weekC = comm(my.filter(t => t.date >= wkStr));
+  const hadYd = my.some(t => t.date === yd), hadD2 = my.some(t => t.date === d2);
+  const offTomorrow = (ctx.getDayoffs() || []).some(d => d.date === tm && ctx.norm(d.staff) === ctx.norm(name));
+  const streak = ctx.getStreak(name);
+  const goal = ctx.getGoal(name);
+  const goalPct = goal ? Math.min(100, Math.round(monthC / goal * 100)) : null;
+
+  // "Clean records" streak: days with sales logged AND payment proof AND a product check
+  const mySales = SALES.filter(s => ctx.norm(s.staff) === ctx.norm(name) && s.status !== 'VOID' && s.status !== 'DELETED');
+  const dayClean = date => {
+    const tx = my.filter(t => t.date === date);
+    if (!tx.length) return null;
+    const proofOk = tx.every(t => !(t.status !== 'DEBT' && t.payment && t.payment !== 'Cash') || t.payTime || t.payRef || t.payerName);
+    const prodOk = mySales.some(s => s.date === date) || tx.some(t => t.noProductReason);
+    const hasNew = tx.some(t => t.payTime || t.payRef || t.payerName || t.noProductReason) || mySales.some(s => s.date === date);
+    return hasNew && proofOk && prodOk;
+  };
+  let clean = 0;
+  for (let i = 0; i < 60; i++) {
+    const r = dayClean(dayStr(-i));
+    if (r === null) { if (i === 0) continue; else break; }
+    if (r) clean++; else break;
+  }
+
+  let pool = 'good';
+  if (!hadYd && hadD2) pool = 'return';
+  else if (offTomorrow) pool = 'offday';
+  else if (ydC < 400) pool = 'quiet';
+
+  return { name, first: firstName(name), ydC, weekC, monthC, streak, goal, goalPct, clean, pool, myCount: my.length };
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning ☀️' : h < 17 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+}
+
+// ------------------------------------------------------------
+//  DAILY WORD  (different for every person, every day)
+// ------------------------------------------------------------
+function wordFor(name) {
+  const dayNum = Math.floor(Date.now() / 86400000);
+  const idx = (hashStr(ctx.norm(name)) + dayNum + wordShift) % DAILY_WORDS.length;
+  return DAILY_WORDS[idx];
+}
+
+// ------------------------------------------------------------
+//  BOOST BANNER (replaces the old pop-up after login)
+// ------------------------------------------------------------
+export function renderBanner() {
+  const el = $('boostBanner'); if (!el) return;
+  const CU = ctx.getCU(); if (!CU) { el.innerHTML = ''; return; }
+
+  if (CU.role === 'admin') {
+    const n = REQS.filter(r => r.status === 'new').length;
+    const urgent = REQS.filter(r => r.status === 'new' && r.urgency === 'urgent').length;
+    el.innerHTML = n ? `
+      <div class="boost boost-admin">
+        <div class="boost-top"><span class="boost-hi">💛 Team care</span></div>
+        <div class="boost-line">${n} team member${n > 1 ? 's' : ''} asked for support${urgent ? ` — <b style="color:#fca5a5">${urgent} urgent</b>` : ''}.</div>
+        <div class="boost-actions"><button class="boost-btn" onclick="goPage('careInbox')">Open Care Inbox →</button></div>
+      </div>` : '';
+    return;
+  }
+
+  if (bannerHidden) { el.innerHTML = ''; return; }
+  const p = personal();
+  const w = wordFor(p.name);
+  const seed = hashStr(ctx.norm(p.name) + ctx.todayStr());
+  const main = ctx.pickMsg(p.pool, seed);
+  const pool = (BOOST_LINES[p.pool] || []).concat(BOOST_LINES.any);
+  const extra = pool[(seed >>> 3) % pool.length];
+  const replied = REQS.filter(r => r.adminReply && !r.replySeen).length;
+
+  const chips = [];
+  if (p.ydC > 0) chips.push(`💰 Yesterday ${fmtKsh(p.ydC)}`);
+  if (p.streak > 0) chips.push(`🔥 ${p.streak}-day streak`);
+  if (p.clean > 0) chips.push(`✅ ${p.clean}-day clean records`);
+  if (p.goalPct !== null) chips.push(`🎯 Goal ${p.goalPct}%`);
+
+  el.innerHTML = `
+    <div class="boost">
+      <button class="boost-x" aria-label="Hide" onclick="careHideBanner()">×</button>
+      <div class="boost-top"><span class="boost-hi">${greeting()}, ${esc(p.first)}</span></div>
+      <div class="boost-line">${esc(main || 'Great to have you here!')}</div>
+      <div class="boost-sub">${esc(extra)}</div>
+      ${chips.length ? `<div class="boost-chips">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : ''}
+      <div class="boost-actions">
+        <button class="boost-btn" onclick="goPage('mySpace')">🙏 Today's Word: ${esc(w.title)}</button>
+        <button class="boost-btn ghost" onclick="goPage('mySpace');setTimeout(()=>document.getElementById('msBuddy')?.scrollIntoView({behavior:'smooth'}),150)">💛 How are you?</button>
+        ${replied ? `<button class="boost-btn warm" onclick="goPage('mySpace')">💌 Your manager replied</button>` : ''}
+      </div>
+    </div>`;
+}
+window.careHideBanner = () => { bannerHidden = true; const e = $('boostBanner'); if (e) e.innerHTML = ''; };
+
+// ------------------------------------------------------------
+//  MY SPACE PAGE (staff)
+// ------------------------------------------------------------
+export function renderMySpace() {
+  const CU = ctx.getCU(); if (!CU || CU.role === 'admin') return;
+  const p = personal();
+
+  $('msHero').innerHTML = `
+    <div class="ms-hero">
+      <div>
+        <div class="ms-hi">${greeting()}</div>
+        <div class="ms-name">${esc(p.first)}, this space is yours.</div>
+        <div class="ms-sub">A daily word, a place to talk things through, and a way to ask for help if you ever need it.</div>
+      </div>
+      <div class="ms-stats">
+        <div class="ms-stat"><b>${fmtKsh(p.ydC)}</b><span>Yesterday</span></div>
+        <div class="ms-stat"><b>${fmtKsh(p.weekC)}</b><span>This week</span></div>
+        <div class="ms-stat"><b>${p.streak > 0 ? '🔥 ' + p.streak : '—'}</b><span>Day streak</span></div>
+        <div class="ms-stat"><b>${p.clean > 0 ? '✅ ' + p.clean : '—'}</b><span>Clean records</span></div>
+      </div>
+      ${p.goalPct !== null ? `<div class="ms-goal"><div class="ms-goal-top"><span>🎯 Monthly goal</span><span>${fmtKsh(p.monthC)} / ${fmtKsh(p.goal)}</span></div><div class="ms-bar"><i style="width:${p.goalPct}%"></i></div></div>` : ''}
+    </div>`;
+
+  renderWord();
+  if (!B) buddyStart(); else renderBuddyShell(false);
+  renderRequestsList(true);
+}
+
+function renderWord() {
+  const CU = ctx.getCU();
+  const w = wordFor(CU.name);
+  $('msWord').innerHTML = `
+    <div class="word-head"><span class="word-theme">${esc(w.theme)}</span><span class="word-date">Today's Word</span></div>
+    <h3 class="word-title">${esc(w.title)}</h3>
+    <blockquote class="word-verse">“${esc(w.verse)}”<cite>${esc(w.ref)} (KJV)</cite></blockquote>
+    <p class="word-body">${esc(w.body)}</p>
+    <div class="word-challenge"><b>Try this today:</b> ${esc(w.challenge)}</div>
+    <div class="word-actions">
+      <button class="boost-btn ghost" onclick="careAnotherWord()">🔄 Another word</button>
+      <button class="boost-btn ghost" onclick="carePray()">🙏 A short prayer</button>
+    </div>
+    <div id="wordPrayer" class="word-prayer" style="display:none"></div>`;
+}
+window.careAnotherWord = () => { wordShift++; renderWord(); };
+window.carePray = () => {
+  const el = $('wordPrayer'); if (!el) return;
+  el.textContent = PRAYERS.default; el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+// ------------------------------------------------------------
+//  BUDDY  — scripted, private, honest about what it is
+// ------------------------------------------------------------
+function renderBuddyShell(fresh) {
+  const host = $('msBuddy'); if (!host) return;
+  if (!fresh && $('buddyFeed')) return; // keep the existing conversation on screen
+  host.innerHTML = `
+    <div class="buddy-head">
+      <div class="buddy-avatar">💛</div>
+      <div class="buddy-title"><b>Talk it out</b><small>Buddy · an automated guide, not a person</small></div>
+      <button class="buddy-reset" title="Start over" onclick="careBuddyReset()">↺</button>
+    </div>
+    <div class="buddy-privacy">🔒 <b>Private by default.</b> Nothing you type here is saved or seen by anyone. Your manager only sees something if <i>you</i> choose “Send to my manager” at the end — and you'll see exactly what will be sent first.</div>
+    <div class="buddy-feed" id="buddyFeed"></div>
+    <div class="buddy-quick" id="buddyQuick"></div>
+    <div class="buddy-input" id="buddyInput" style="display:none">
+      <textarea id="buddyText" rows="2" placeholder="Type here…"></textarea>
+      <button class="boost-btn" id="buddySend">Send</button>
+    </div>`;
+}
+window.careBuddyReset = () => { if (buddyBusy) return; B = null; buddyStart(); };
+
+const feed = () => $('buddyFeed');
+function scrollFeed() { const f = feed(); if (f) f.scrollTop = f.scrollHeight; }
+function addBubble(html, who) {
+  const f = feed(); if (!f) return;
+  const d = document.createElement('div');
+  d.className = 'bb ' + who; d.innerHTML = html; f.appendChild(d); scrollFeed();
+}
+async function say(text, opts = {}) {
+  buddyBusy = true;
+  const f = feed(); if (!f) { buddyBusy = false; return; }
+  const t = document.createElement('div'); t.className = 'bb them typing'; t.innerHTML = '<span></span><span></span><span></span>';
+  f.appendChild(t); scrollFeed();
+  await sleep(opts.fast ? 250 : Math.min(1100, 350 + text.length * 8));
+  t.remove(); addBubble(opts.html ? text : esc(text), 'them'); buddyBusy = false;
+}
+const echo = t => addBubble(esc(t), 'me');
+function clearInputs() { const q = $('buddyQuick'); if (q) q.innerHTML = ''; const i = $('buddyInput'); if (i) i.style.display = 'none'; }
+function askChips(options, cb) {
+  clearInputs();
+  const q = $('buddyQuick'); if (!q) return;
+  options.forEach(o => {
+    const b = document.createElement('button'); b.className = 'chip'; b.textContent = o.label;
+    b.onclick = () => { if (buddyBusy) return; clearInputs(); echo(o.label); cb(o.val); };
+    q.appendChild(b);
+  });
+  scrollFeed();
+}
+function askText(placeholder, cb, skipLabel) {
+  clearInputs();
+  const wrap = $('buddyInput'), ta = $('buddyText'), send = $('buddySend'); if (!wrap) return;
+  wrap.style.display = 'flex'; ta.value = ''; ta.placeholder = placeholder;
+  const submit = () => { if (buddyBusy) return; const v = ta.value.trim(); if (v.length < 2) return; clearInputs(); echo(v); cb(v); };
+  send.onclick = submit;
+  ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } };
+  if (skipLabel) {
+    const q = $('buddyQuick'); const b = document.createElement('button'); b.className = 'chip ghost'; b.textContent = skipLabel;
+    b.onclick = () => { if (buddyBusy) return; clearInputs(); echo(skipLabel); cb(''); }; q.appendChild(b);
+  }
+  ta.focus(); scrollFeed();
+}
+function helplineHtml(list) {
+  return `<div class="helpline">${list.map(h => `<div><span>${esc(h.name)}</span><a href="tel:${h.num.replace(/\s/g, '')}">${esc(h.num)}</a></div>`).join('')}</div>`;
+}
+
+async function buddyStart() {
+  const CU = ctx.getCU(); if (!CU) return;
+  B = { mood: null, topic: null, text: '', help: 'unsure', urgency: 'normal', safety: null, tempted: false, includeWords: true, done: false };
+  renderBuddyShell(true);
+  await say(`Hey ${firstName(CU.name)} 👋 I'm Buddy. This is a no-judgment space.`);
+  await say('How are you really doing today?');
+  askChips(MOODS.map(m => ({ label: `${m.e} ${m.l}`, val: m })), onMood);
+}
+
+async function onMood(m) {
+  B.mood = m;
+  if (m.k >= 4) {
+    await say(m.k === 5 ? 'Love that! 🎉 Hold on to that energy.' : 'Good to hear. Steady is a win too.');
+    await say('Want to share one good thing from lately? Or we can keep it simple.');
+    askChips([
+      { label: '✍️ Share a win', val: 'win' },
+      { label: '📖 Show today\'s Word', val: 'word' },
+      { label: '💭 Actually, something is on my mind', val: 'talk' },
+      { label: '👍 I\'m good, thanks', val: 'done' }
+    ], async v => {
+      if (v === 'win') { await say('Yes! Tell me about it.'); askText('Your win…', async () => { await say('That is something to be proud of. 🌟 Celebrate it, then carry that energy into your next client.'); endMenu(); }); }
+      else if (v === 'word') { await say('Here you go. Scroll up to today\'s Word. 🙏'); $('msWord')?.scrollIntoView({ behavior: 'smooth' }); endMenu(); }
+      else if (v === 'talk') pickTopic();
+      else { await say('Have a great day, and remember: this space is here whenever you need it. 💛'); endMenu(); }
+    });
+  } else {
+    await say(m.k === 3 ? 'Thanks for being honest. "Meh" days are real.' : 'I\'m really glad you told me. That takes honesty.');
+    pickTopic(true);
+  }
+}
+
+async function pickTopic(already) {
+  if (!already) await say('Okay. What is it about?');
+  else await say('What is weighing on you most?');
+  askChips(TOPICS.map(t => ({ label: `${t.e} ${t.l}`, val: t })), onTopic);
+}
+
+async function onTopic(t) {
+  B.topic = t;
+  await say(TOPIC_OPEN[t.k]);
+  askText('Type what is going on…', onStory, 'I\'d rather not say');
+}
+
+async function onStory(text) {
+  B.text = text;
+  const t = B.topic.k;
+  if (RX.crisis.test(text)) return crisisFlow();
+  if (RX.gbv.test(text)) return gbvFlow();
+  if (RX.tempted.test(text)) B.tempted = true;
+
+  if (text) await say('Thank you for trusting me with that. What you are feeling is valid, and it makes sense that this is heavy.');
+  else await say('That is okay. You do not have to say more than you want to.');
+
+  if (B.tempted) {
+    await say('Thank you for being honest. That took courage. When money is tight it can feel like there is no way out, but taking what is not yours usually adds a second weight: fear and guilt. There are honest ways through, and people who can help you find them.');
+  }
+  if (RX.substance.test(text)) {
+    await say('If alcohol or drugs are part of this, there is free, confidential help. Reaching out is a strong move, not a weak one.');
+    await say(helplineHtml(HELPLINES.substance), { html: true, fast: true });
+  }
+
+  const tips = (TOPIC_TIPS[t] || TOPIC_TIPS.other).slice(0, 3);
+  await say('A few ideas that might help:');
+  await say('• ' + tips.join('\n• '), { fast: true });
+  await nextSteps();
+}
+
+async function nextSteps() {
+  await say('What would you like to do next?');
+  const opts = [
+    { label: '📨 Let my manager know', val: 'share' },
+    { label: '🙏 A short prayer', val: 'pray' },
+    { label: '📖 Today\'s Word', val: 'word' },
+    { label: '🔒 Keep this between us', val: 'private' }
+  ];
+  askChips(opts, async v => {
+    if (v === 'share') return shareFlow();
+    if (v === 'pray') { await say(PRAYERS[B.topic?.k] || PRAYERS.default); return endMenu(); }
+    if (v === 'word') { await say('Scroll up to today\'s Word. 🙏'); $('msWord')?.scrollIntoView({ behavior: 'smooth' }); return endMenu(); }
+    await say('Of course. Nothing was saved and nobody was told. Come back any time. 💛'); endMenu();
+  });
+}
+
+async function crisisFlow() {
+  B.safety = 'crisis'; B.urgency = 'urgent';
+  await say('I am really concerned about you, and I am glad you said it. You matter, and you do not have to carry this alone.');
+  await say(helplineHtml(HELPLINES.crisis), { html: true, fast: true });
+  await say('Please call one of these right now, or go to someone you trust nearby. Would you like me to let your manager know today so someone can check on you?');
+  askChips([
+    { label: '✅ Yes, tell my manager (urgent)', val: 'yes' },
+    { label: 'Not right now', val: 'no' }
+  ], async v => {
+    if (v === 'yes') { B.help = 'listen'; return shareConfirm(); }
+    await say('Okay. Those numbers are free and I am here whenever you want to talk. Please do not stay alone with this tonight. 💛'); endMenu();
+  });
+}
+
+async function gbvFlow() {
+  B.safety = 'gbv';
+  await say('I am so sorry. What you described is not okay, and none of it is your fault. Your safety comes first.');
+  await say(helplineHtml(HELPLINES.gbv.concat(HELPLINES.crisis.slice(2))), { html: true, fast: true });
+  await say('These services are free and confidential. Would you like your manager to know you need support?');
+  askChips([
+    { label: '📨 Yes, let my manager know', val: 'yes' },
+    { label: 'Not right now', val: 'no' }
+  ], async v => {
+    if (v === 'yes') return shareFlow();
+    await say('That is okay. You are in control of this. The numbers are here whenever you are ready. 💛'); endMenu();
+  });
+}
+
+async function shareFlow() {
+  await say('Sometimes the best help comes from a real person. If you share, your manager will see only what you approve in the next steps.');
+  await say('What kind of help would be most useful?');
+  askChips(HELP_TYPES.map(h => ({ label: h.l, val: h.k })), async v => {
+    B.help = v;
+    if (B.safety === 'crisis') return shareConfirm();
+    await say('How urgent is it?');
+    askChips(URGENCY.map(u => ({ label: u.l, val: u.k })), async u => {
+      B.urgency = u;
+      if (!B.text) { B.includeWords = false; return shareConfirm(); }
+      await say('Do you want to include your own words, or share just the topic?');
+      askChips([
+        { label: 'Topic + my words', val: true },
+        { label: 'Topic only (keep my words private)', val: false }
+      ], async inc => { B.includeWords = inc; shareConfirm(); });
+    });
+  });
+}
+
+async function shareConfirm() {
+  const CU = ctx.getCU();
+  const help = HELP_TYPES.find(h => h.k === B.help)?.l || 'Not sure yet';
+  const urg = URGENCY.find(u => u.k === B.urgency)?.l || 'No rush';
+  const words = B.includeWords && B.text ? esc(B.text) : '<i>(not included)</i>';
+  await say('Here is <b>exactly</b> what your manager will see:', { html: true, fast: true });
+  await say(`<div class="preview">
+    <div><span>From</span><b>${esc(CU.name)}</b></div>
+    <div><span>Topic</span><b>${B.topic ? B.topic.e + ' ' + esc(B.topic.l) : '—'}</b></div>
+    <div><span>Help wanted</span><b>${esc(help)}</b></div>
+    <div><span>Urgency</span><b>${esc(urg)}</b></div>
+    <div><span>Your words</span><b style="font-weight:500">${words}</b></div>
+  </div>`, { html: true, fast: true });
+  askChips([
+    { label: '✅ Send to my manager', val: 'send' },
+    { label: '✖ Cancel, send nothing', val: 'cancel' }
+  ], async v => {
+    if (v === 'cancel') { await say('No problem. Nothing was sent. 💛'); return endMenu(); }
+    try {
+      await addDoc(collection(ctx.db, 'supportRequests'), {
+        staff: CU.name,
+        mood: B.mood ? B.mood.k : null,
+        topic: B.topic ? B.topic.k : 'other',
+        topicLabel: B.topic ? B.topic.l : 'Something else',
+        helpType: B.help,
+        urgency: B.urgency,
+        message: B.includeWords ? B.text : '',
+        safetyFlag: B.safety || null,
+        status: 'new',
+        adminReply: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      await say('Sent. 💛 Your manager will see this and respond when they can. You will see their reply in “My requests” below. Thank you for trusting us.');
+      if (B.urgency === 'urgent') await say('Because it is urgent, please also use one of the numbers above if you need someone right now.');
+    } catch (e) {
+      console.error(e);
+      await say('I could not send that just now. Please check your connection and try again, or speak to your manager directly.');
+    }
+    endMenu();
+  });
+}
+
+function endMenu() {
+  askChips([
+    { label: '↺ Start over', val: 'again' },
+    { label: '👋 That\'s all for now', val: 'bye' }
+  ], async v => {
+    if (v === 'again') { B = null; buddyStart(); }
+    else { await say('Take care of yourself. I\'m here whenever you need me. 💛'); clearInputs(); }
+  });
+}
+
+// ------------------------------------------------------------
+//  STAFF: my requests + replies
+// ------------------------------------------------------------
+function statusPill(r) {
+  if (r.status === 'resolved') return '<span class="pill ok">Resolved</span>';
+  if (r.adminReply) return '<span class="pill warm">Replied</span>';
+  if (r.status === 'seen') return '<span class="pill">Seen</span>';
+  return '<span class="pill mute">Sent</span>';
+}
+function renderRequestsList(markSeen) {
+  const host = $('msRequests'); if (!host) return;
+  if (!REQS.length) { host.innerHTML = '<div class="card-title">📮 My requests</div><div class="empty-note">Nothing sent yet. If you ever choose to share something with your manager, it will show up here along with any reply.</div>'; return; }
+  host.innerHTML = '<div class="card-title">📮 My requests</div>' + REQS.map(r => {
+    const t = TOPICS.find(x => x.k === r.topic);
+    return `<div class="req">
+      <div class="req-top"><span>${t ? t.e : '💭'} <b>${esc(r.topicLabel || 'Support')}</b></span>${statusPill(r)}<span class="req-time">${timeAgo(r.createdAt)}</span></div>
+      ${r.message ? `<div class="req-msg">“${esc(r.message)}”</div>` : ''}
+      ${r.adminReply ? `<div class="req-reply"><b>💌 Your manager:</b> ${esc(r.adminReply)}</div>` : ''}
+    </div>`;
+  }).join('');
+  if (markSeen) {
+    REQS.filter(r => r.adminReply && !r.replySeen).forEach(r => {
+      updateDoc(doc(ctx.db, 'supportRequests', r.id), { replySeen: true }).catch(() => { });
+    });
+  }
+}
+
+// ------------------------------------------------------------
+//  ADMIN: CARE INBOX
+// ------------------------------------------------------------
+export function renderCareInbox() {
+  const CU = ctx.getCU(); if (!CU || CU.role !== 'admin') return;
+  const host = $('careList'); if (!host) return;
+  const nNew = REQS.filter(r => r.status === 'new').length;
+  const nOpen = REQS.filter(r => r.status !== 'resolved').length;
+  const filters = [['open', `Open (${nOpen})`], ['new', `New (${nNew})`], ['resolved', 'Resolved'], ['all', 'All']];
+  $('careFilters').innerHTML = filters.map(([k, l]) => `<button class="qbtn${inboxFilter === k ? ' active' : ''}" onclick="careFilter('${k}')">${l}</button>`).join('');
+
+  let list = REQS.slice();
+  if (inboxFilter === 'open') list = list.filter(r => r.status !== 'resolved');
+  else if (inboxFilter === 'new') list = list.filter(r => r.status === 'new');
+  else if (inboxFilter === 'resolved') list = list.filter(r => r.status === 'resolved');
+  const rank = u => u === 'urgent' ? 0 : u === 'soon' ? 1 : 2;
+  list.sort((a, b) => (a.status === 'resolved') - (b.status === 'resolved') || rank(a.urgency) - rank(b.urgency) || (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+  if (!list.length) { host.innerHTML = '<div class="empty-note">Nothing here right now. 💛 When a team member chooses to ask for support, it will appear here.</div>'; return; }
+  host.innerHTML = list.map(r => {
+    const t = TOPICS.find(x => x.k === r.topic);
+    const m = MOODS.find(x => x.k === r.mood);
+    const help = HELP_TYPES.find(h => h.k === r.helpType)?.l || '—';
+    const urg = r.urgency === 'urgent' ? '<span class="pill bad">Urgent</span>' : r.urgency === 'soon' ? '<span class="pill warn">Soon</span>' : '<span class="pill mute">No rush</span>';
+    return `<div class="care-card ${r.urgency === 'urgent' && r.status !== 'resolved' ? 'is-urgent' : ''}">
+      <div class="care-top">
+        <div><b class="care-name">${esc(r.staff)}</b> <span class="req-time">${timeAgo(r.createdAt)}</span></div>
+        <div>${urg} ${statusPill(r)}</div>
+      </div>
+      <div class="care-meta">
+        <span>${t ? t.e : '💭'} ${esc(r.topicLabel || '')}</span>
+        <span>${m ? m.e + ' ' + m.l : ''}</span>
+        <span>🤝 ${esc(help)}</span>
+      </div>
+      ${r.safetyFlag === 'crisis' ? '<div class="care-alert">⚠️ Marked as a safety concern. Please check in with this person in person, today.</div>' : ''}
+      ${r.safetyFlag === 'gbv' ? '<div class="care-alert">⚠️ They mentioned a safety situation at home. Please be discreet and supportive.</div>' : ''}
+      <div class="care-msg">${r.message ? '“' + esc(r.message) + '”' : '<i style="opacity:.6">They chose to share the topic only.</i>'}</div>
+      ${r.adminReply ? `<div class="req-reply"><b>Your reply:</b> ${esc(r.adminReply)}</div>` : ''}
+      <details class="care-reply"><summary>${r.adminReply ? 'Send another reply' : 'Reply to ' + esc(firstName(r.staff))}</summary>
+        <textarea id="rp_${r.id}" rows="2" placeholder="Write something kind and clear. They will see this in their My Space."></textarea>
+        <button class="boost-btn" onclick="careSendReply('${r.id}')">Send reply</button>
+      </details>
+      <div class="care-actions">
+        ${r.status === 'new' ? `<button class="chip" onclick="careSetStatus('${r.id}','seen')">👁 Mark seen</button>` : ''}
+        ${r.status !== 'resolved' ? `<button class="chip" onclick="careSetStatus('${r.id}','resolved')">✅ Resolved</button>` : `<button class="chip" onclick="careSetStatus('${r.id}','seen')">↩ Reopen</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+window.careFilter = k => { inboxFilter = k; renderCareInbox(); };
+window.careSetStatus = async (id, status) => {
+  try { await updateDoc(doc(ctx.db, 'supportRequests', id), { status, updatedAt: new Date().toISOString() }); }
+  catch (e) { ctx.showToast('Could not update: ' + e.message, true); }
+};
+window.careSendReply = async id => {
+  const v = ($('rp_' + id)?.value || '').trim();
+  if (v.length < 2) { ctx.showToast('Write a reply first', true); return; }
+  try {
+    await updateDoc(doc(ctx.db, 'supportRequests', id), { adminReply: v, replySeen: false, status: 'seen', replyAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    ctx.showToast('💌 Reply sent');
+  } catch (e) { ctx.showToast('Could not send: ' + e.message, true); }
+};
