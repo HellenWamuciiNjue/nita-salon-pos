@@ -1219,7 +1219,7 @@ function renderTx(){
         <td style="color:${isVoid?'#6b7280':'#a78bfa'}">${isVoid?'<s>':''} ${(t.commission||0).toLocaleString()} ${isVoid?'</s>':''}</td>
         <td>${t.payment||'Cash'}${proofHtml(t)}</td>
         <td>${billBadge(t)}</td>
-        <td style="display:flex;gap:3px;flex-wrap:wrap">${acts}</td>
+        <td><div style="display:flex;gap:3px;flex-wrap:wrap">${acts}</div></td>
       </tr>`;
     }).join('');
   }
@@ -4323,7 +4323,7 @@ function renderSales(){
         <td>${s.shop||'—'}</td>
         <td>${payBadge}</td>
         <td>${s.staff||''}</td>
-        <td style="display:flex;gap:3px;flex-wrap:wrap">${acts}</td>
+        <td><div style="display:flex;gap:3px;flex-wrap:wrap">${acts}</div></td>
       </tr>`;
     }).join('');
   }
