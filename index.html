@@ -18,16 +18,96 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh}
+/* GLOBAL BOX-SIZING FIX */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevents sideways floating/scrolling */
+}
+
 /* LOGIN */
-.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#fdfbfb,#f3e7e9)}
-.login-box{background:#2b1e20;border:1px solid #e5c1b3;border-radius:16px;padding:40px;width:90%;max-width:380px;text-align:center;box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15)}
-.login-box h1{font-size:26px;color:#a78bfa;margin-bottom:4px}
-.login-box .subtitle{color:#6b7280;margin-bottom:28px;font-size:13px}
-.login-box input{width:100%;padding:12px 16px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#e0e0e0;font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
-.login-box input:focus{border-color:#e5c1b3}
-.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,#e5c1b3,#5b21b6);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-login:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,58,237,.5)}
-.login-err{color:#f87171;font-size:12px;margin-top:8px;min-height:18px}
+.login-screen {
+  position: fixed; /* Locks login screen neatly to the phone screen */
+  inset: 0;        /* Stretches to all 4 edges cleanly */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 16px;   /* Keeps a clean margin on tiny phones */
+  background: linear-gradient(135deg, #fdfbfb, #f3e7e9);
+  z-index: 9999;
+}
+
+.login-box {
+  background: #2b1e20;
+  border: 1px solid #e5c1b3;
+  border-radius: 16px;
+  padding: 28px 24px; /* Slightly tighter padding for mobile screens */
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15);
+}
+
+.login-box h1 {
+  font-size: 22px; /* Scales cleanly next to your 44px photo on small phones */
+  color: #a78bfa;
+  margin-bottom: 4px;
+}
+
+.login-box .subtitle {
+  color: #9ca3af;
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #2a2a3e;
+  border: 1px solid #3d3d5c;
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 16px; /* Prevents iPhone Safari from auto-zooming in when typing */
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.login-box input:focus {
+  border-color: #e5c1b3;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #e5c1b3, #5b21b6);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-login:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, .5);
+}
+
+.login-err {
+  color: #f87171;
+  font-size: 12px;
+  margin-top: 8px;
+  min-height: 18px;
+}
+
 /* APP SHELL */
 .app{display:none;flex-direction:column;min-height:100vh}
 .topbar{background:#2b1e20;border-bottom:1px solid #2d2d44;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200}
