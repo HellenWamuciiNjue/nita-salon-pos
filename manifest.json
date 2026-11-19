@@ -6,17 +6,7 @@
   "background_color": "#0f0f1a",
   "theme_color": "#e5c1b3",
   "icons": [
-    {
-      "src": "nita.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "nita.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    }
+    { "src": "nita.jpg", "sizes": "192x192", "type": "image/jpeg", "purpose": "any" },
+    { "src": "nita.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" }
   ]
 }
