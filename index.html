@@ -1582,62 +1582,6 @@ window.doLogout=function(){
 };
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none')window.doLogin();});
 
-// ===== GREETING =====
-function showGreet(){
-  const name=CU.name;
-  const yd=new Date();yd.setDate(yd.getDate()-1);
-  const ydStr=yd.toISOString().split('T')[0];
-  const d2=new Date();d2.setDate(d2.getDate()-2);
-  const d2Str=d2.toISOString().split('T')[0];
-  const my=TX.filter(t=>norm(t.staff)===norm(name)&&t.status!=='DELETED'&&t.status!=='VOID');
-  const ydSales=my.filter(t=>t.date===ydStr).reduce((a,t)=>a+(t.price||0),0);
-  const hadYd=my.some(t=>t.date===ydStr);
-  const hadD2=my.some(t=>t.date===d2Str);
-  // Check if tomorrow is off day
-  const tmrw=new Date();tmrw.setDate(tmrw.getDate()+1);
-  const tmrwStr=tmrw.toISOString().split('T')[0];
-  const hasTmrwOff=DAYOFFS.some(d=>d.date===tmrwStr&&norm(d.staff)===norm(name));
-  let pool='good',emoji='⭐';
-  if(!hadYd&&hadD2){pool='return';emoji='🌺';}
-  else if(hasTmrwOff){pool='offday';emoji='🎉';}
-  else if(ydSales<1000){pool='quiet';emoji='🌈';}
-  const m=randMsg(pool);
-  let sub=ydSales>0?`Yesterday you made Ksh ${ydSales.toLocaleString()} in commission. Today is a fresh new start!`:'Today is your fresh new start — make it count!';
-  // Personalized coaching tip: point out where a bit more effort could pay off, plus punctuality/rest reminders
-  let tip;
-  if(pool==='offday'){
-    tip=`${name}, give today everything you've got — then when your off day lands, REST fully. Recharge completely so you come back even stronger! 🔋`;
-  }else if(pool==='return'){
-    tip=`${name}, hope you rested well! Come in early today and stay till closing — that's when the best clients walk in. ⏰`;
-  }else{
-    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-14);
-    const cutoffStr=cutoff.toISOString().split('T')[0];
-    const recent=my.filter(t=>t.date>=cutoffStr);
-    if(recent.length>=3){
-      const counts={};
-      recent.forEach(t=>{counts[t.service]=(counts[t.service]||0)+1;});
-      const weakest=Object.entries(counts).sort((a,b)=>a[1]-b[1])[0][0];
-      tip=`${name}, quick tip: try offering ${weakest} to a few more clients this week — a small push there could really boost your numbers! 💡 And remember: early in, late out — that's where the magic happens. ⏰`;
-    }else{
-      tip=`${name}, every client today is a chance to shine — give each one your full attention! And remember: clock in early, stay till close — that's when the best clients come through. ⏰`;
-    }
-  }
-  document.getElementById('gEmoji').textContent=emoji;
-  document.getElementById('gName').textContent='Hey '+name+'! 👋';
-  document.getElementById('gMsg').textContent=m;
-  document.getElementById('gSub').textContent=sub;
-  const gTipEl=document.getElementById('gTip');if(gTipEl)gTipEl.textContent=tip;
-  document.getElementById('greetOverlay').classList.add('show');
-}
-function closeGreet(){document.getElementById('greetOverlay').classList.remove('show');}
-window.closeGreet=closeGreet;
-
-function showSaveMsg(staff,comm){
-  if(CU.role!=='admin'||norm(staff)===norm(CU.name)){
-    showToast('✅ Saved! '+randMsg('save')+' (Commission: Ksh '+comm.toLocaleString()+')');
-  }else{showToast('✅ Transaction(s) saved!');}
-}
-
 // ===== INIT =====
 async function initApp(){
   buildSaleForm();
