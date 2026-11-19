@@ -7,35 +7,35 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nita Salon">
-<meta name="theme-color" content="#7c3aed">
+<meta name="theme-color" content="#e5c1b3">
 <title>Nita's Salon POS</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh}
 /* LOGIN */
-.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a0533,#0f0f1a)}
-.login-box{background:#1e1e2e;border:1px solid #7c3aed;border-radius:16px;padding:40px;width:90%;max-width:380px;text-align:center;box-shadow:0 0 40px rgba(124,58,237,0.3)}
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#fdfbfb,#f3e7e9)}
+.login-box{background:#ffffff;border:1px solid #e5c1b3;border-radius:16px;padding:40px;width:90%;max-width:380px;text-align:center;box-shadow: 0 10px 30px rgba(181, 101, 118, 0.15)}
 .login-box h1{font-size:26px;color:#a78bfa;margin-bottom:4px}
 .login-box .subtitle{color:#6b7280;margin-bottom:28px;font-size:13px}
 .login-box input{width:100%;padding:12px 16px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#e0e0e0;font-size:14px;margin-bottom:12px;outline:none;transition:border-color .2s}
-.login-box input:focus{border-color:#7c3aed}
-.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.login-box input:focus{border-color:#e5c1b3}
+.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,#e5c1b3,#5b21b6);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
 .btn-login:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(124,58,237,.5)}
 .login-err{color:#f87171;font-size:12px;margin-top:8px;min-height:18px}
 /* GREETING */
 .greet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
 .greet-overlay.show{opacity:1;pointer-events:all}
-.greet-card{background:linear-gradient(135deg,#1e1e2e,#2a1a4e);border:1px solid #7c3aed;border-radius:20px;padding:32px;max-width:460px;width:92%;text-align:center;transform:scale(.85);transition:transform .3s;box-shadow:0 0 60px rgba(124,58,237,.4)}
+.greet-card{background:linear-gradient(135deg,#ffffff,#2a1a4e);border:1px solid #e5c1b3;border-radius:20px;padding:32px;max-width:460px;width:92%;text-align:center;transform:scale(.85);transition:transform .3s;box-shadow:0 0 60px rgba(124,58,237,.4)}
 .greet-overlay.show .greet-card{transform:scale(1)}
 .greet-emoji{font-size:48px;margin-bottom:10px}
 .greet-name{font-size:20px;font-weight:700;color:#a78bfa;margin-bottom:8px}
 .greet-msg{font-size:14px;color:#c4b5fd;line-height:1.7;margin-bottom:12px}
 .greet-sub{font-size:12px;color:#6b7280;margin-bottom:20px;font-style:italic}
-.btn-start{background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:10px;color:#fff;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-start{background:linear-gradient(135deg,#e5c1b3,#5b21b6);border:none;border-radius:10px;color:#fff;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer}
 /* APP SHELL */
 .app{display:none;flex-direction:column;min-height:100vh}
-.topbar{background:#1e1e2e;border-bottom:1px solid #2d2d44;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200}
+.topbar{background:#ffffff;border-bottom:1px solid #2d2d44;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200}
 .topbar-logo{display:flex;align-items:center;gap:8px}
 .topbar-logo h2{font-size:16px;color:#a78bfa;font-weight:700}
 .topbar-right{display:flex;align-items:center;gap:8px}
@@ -43,17 +43,17 @@ body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-heig
 .btn-logout{background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;padding:5px 12px;color:#9ca3af;cursor:pointer;font-size:12px}
 .btn-logout:hover{border-color:#f87171;color:#f87171}
 /* BOTTOM NAV (mobile) */
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#1e1e2e;border-top:1px solid #2d2d44;z-index:150;height:56px}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#ffffff;border-top:1px solid #2d2d44;z-index:150;height:56px}
 .bottom-nav-inner{display:flex;height:100%}
 .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#6b7280;cursor:pointer;font-size:10px;gap:2px;transition:color .2s;padding:4px 2px;border:none;background:none}
 .bnav-item.active{color:#a78bfa}
 .bnav-item .bicon{font-size:20px;line-height:1}
 /* SIDEBAR (desktop) */
 .layout{display:flex;flex:1}
-.sidebar{width:190px;background:#1e1e2e;border-right:1px solid #2d2d44;padding:12px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0}
+.sidebar{width:190px;background:#ffffff;border-right:1px solid #2d2d44;padding:12px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;color:#9ca3af;cursor:pointer;font-size:14px;transition:all .2s;border-left:3px solid transparent}
 .nav-item:hover{background:#2a2a3e;color:#e0e0e0}
-.nav-item.active{background:#2a2a3e;color:#a78bfa;border-left-color:#7c3aed}
+.nav-item.active{background:#2a2a3e;color:#a78bfa;border-left-color:#e5c1b3}
 .nav-icon{font-size:17px;width:20px;text-align:center}
 /* CONTENT */
 .content{flex:1;padding:16px;overflow-y:auto;min-width:0;padding-bottom:70px}
@@ -61,7 +61,7 @@ body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-heig
 .page.active{display:block}
 .page-title{font-size:20px;font-weight:700;color:#a78bfa;margin-bottom:16px}
 /* CARDS */
-.card{background:#1e1e2e;border:1px solid #2d2d44;border-radius:12px;padding:16px;margin-bottom:16px}
+.card{background:#ffffff;border:1px solid #2d2d44;border-radius:12px;padding:16px;margin-bottom:16px}
 .card-title{font-size:14px;font-weight:600;color:#c4b5fd;margin-bottom:14px}
 /* FORM */
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
@@ -69,26 +69,26 @@ body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-heig
 .form-group{display:flex;flex-direction:column;gap:4px}
 .form-group label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .form-group input,.form-group select,.form-group textarea{padding:8px 12px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#e0e0e0;font-size:14px;outline:none;transition:border-color .2s;width:100%}
-.form-group input:focus,.form-group select:focus{border-color:#7c3aed}
-.form-group select option{background:#1e1e2e}
+.form-group input:focus,.form-group select:focus{border-color:#e5c1b3}
+.form-group select option{background:#ffffff}
 /* ENTRY ROW */
 .entry-row{background:#2a2a3e;border:1px solid #3d3d5c;border-radius:10px;padding:14px;margin-bottom:10px;position:relative}
-.entry-num{position:absolute;top:-9px;left:12px;background:#7c3aed;border-radius:10px;padding:1px 8px;font-size:11px;color:#fff;font-weight:700}
+.entry-num{position:absolute;top:-9px;left:12px;background:#e5c1b3;border-radius:10px;padding:1px 8px;font-size:11px;color:#fff;font-weight:700}
 .entry-remove{position:absolute;top:7px;right:8px;background:none;border:none;color:#f87171;cursor:pointer;font-size:18px;line-height:1}
 .entry-comm{font-size:12px;color:#a78bfa;margin-top:5px}
 .client-row{display:none}
 .client-row.show{display:flex}
 /* COMM PREVIEW */
-.comm-preview{background:#1a1a2e;border:1px solid #7c3aed;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.comm-preview{background:#1a1a2e;border:1px solid #e5c1b3;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
 .comm-preview span{font-size:13px;color:#9ca3af}
 .comm-preview strong{font-size:18px;color:#a78bfa;font-weight:700}
 /* BUTTONS */
 .btn{padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:5px}
-.btn-primary{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff}
+.btn-primary{background:linear-gradient(135deg,#e5c1b3,#5b21b6);color:#fff}
 .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,.4)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
 .btn-secondary{background:#2a2a3e;border:1px solid #3d3d5c;color:#9ca3af}
-.btn-secondary:hover{border-color:#7c3aed;color:#a78bfa}
+.btn-secondary:hover{border-color:#e5c1b3;color:#a78bfa}
 .btn-danger{background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:4px 9px;font-size:12px;border-radius:6px;cursor:pointer}
 .btn-warn{background:#451a03;border:1px solid #d97706;color:#fcd34d;padding:4px 9px;font-size:12px;border-radius:6px;cursor:pointer}
 .btn-success{background:#052e16;border:1px solid #166534;color:#4ade80;padding:4px 9px;font-size:12px;border-radius:6px;cursor:pointer}
@@ -96,7 +96,7 @@ body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-heig
 .btn-add:hover{background:#312e81}
 /* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.stat-card{background:#1e1e2e;border:1px solid #2d2d44;border-radius:12px;padding:16px;text-align:center}
+.stat-card{background:#ffffff;border:1px solid #2d2d44;border-radius:12px;padding:16px;text-align:center}
 .stat-val{font-size:22px;font-weight:700;color:#a78bfa}
 .stat-lbl{font-size:11px;color:#6b7280;margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
 .stat-sub{font-size:11px;color:#4b5563;margin-top:2px}
@@ -104,7 +104,7 @@ body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-heig
 .date-range-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px;background:#1a1a2e;border:1px solid #312e81;border-radius:10px;margin-bottom:14px}
 .date-range-bar .form-group{min-width:130px}
 .qbtn{padding:6px 12px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:7px;color:#9ca3af;cursor:pointer;font-size:12px;transition:all .2s;white-space:nowrap}
-.qbtn.active,.qbtn:hover{border-color:#7c3aed;color:#a78bfa}
+.qbtn.active,.qbtn:hover{border-color:#e5c1b3;color:#a78bfa}
 /* TABLE */
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
@@ -123,7 +123,7 @@ tr:hover td{background:#22223a}
 .filters{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end}
 .filters input,.filters select{padding:7px 11px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#e0e0e0;font-size:13px;outline:none}
 .filter-btn{padding:7px 12px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#9ca3af;cursor:pointer;font-size:13px;transition:all .2s;white-space:nowrap}
-.filter-btn.active,.filter-btn:hover{border-color:#7c3aed;color:#a78bfa}
+.filter-btn.active,.filter-btn:hover{border-color:#e5c1b3;color:#a78bfa}
 /* INSIGHTS */
 .insight-box{background:#1a1a2e;border:1px solid #312e81;border-radius:10px;padding:14px;margin-bottom:12px}
 .insight-title{font-size:13px;font-weight:700;color:#818cf8;margin-bottom:8px}
@@ -139,7 +139,7 @@ tr:hover td{background:#22223a}
 /* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-bg.show{opacity:1;pointer-events:all}
-.modal-box{background:#1e1e2e;border:1px solid #7c3aed;border-radius:16px;padding:24px;width:92%;max-width:520px;max-height:90vh;overflow-y:auto;transform:scale(.9);transition:transform .2s}
+.modal-box{background:#ffffff;border:1px solid #e5c1b3;border-radius:16px;padding:24px;width:92%;max-width:520px;max-height:90vh;overflow-y:auto;transform:scale(.9);transition:transform .2s}
 .modal-bg.show .modal-box{transform:scale(1)}
 .modal-title{font-size:16px;font-weight:700;color:#a78bfa;margin-bottom:16px}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
@@ -148,11 +148,11 @@ tr:hover td{background:#22223a}
 .staff-card{background:#2a2a3e;border:1px solid #3d3d5c;border-radius:10px;padding:12px}
 .staff-card h4{color:#c4b5fd;font-size:13px;margin-bottom:5px}
 .staff-card p{font-size:12px;color:#6b7280;margin-bottom:3px}
-.staff-pwd{font-family:monospace;background:#1e1e2e;padding:1px 7px;border-radius:4px;font-size:11px;color:#a78bfa}
+.staff-pwd{font-family:monospace;background:#ffffff;padding:1px 7px;border-radius:4px;font-size:11px;color:#a78bfa}
 /* REPORT TABS */
 .rtabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .rtab{padding:6px 14px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#9ca3af;cursor:pointer;font-size:13px;transition:all .2s}
-.rtab.active{border-color:#7c3aed;color:#a78bfa;background:#1e1b4b}
+.rtab.active{border-color:#e5c1b3;color:#a78bfa;background:#1e1b4b}
 /* MOTIVATION */
 .motiv-box{background:#1a1a2e;border:1px solid #312e81;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px}
 /* COMMISSION PAY TABLE */
@@ -172,7 +172,7 @@ tr:hover td{background:#22223a}
 .cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
 .cal-dname{text-align:center;font-size:11px;font-weight:700;color:#6b7280;padding:4px 2px;text-transform:uppercase}
 .cal-cell{background:#1a1a2e;border:1px solid #2d2d44;border-radius:6px;padding:5px 4px;min-height:56px;position:relative;transition:background .15s}
-.cal-cell.today{border-color:#7c3aed;background:#1e1b4b}
+.cal-cell.today{border-color:#e5c1b3;background:#1e1b4b}
 .cal-cell.has-off{background:#1a1a2e;border-color:#4f46e5}
 .cal-cell.other-month{opacity:.35}
 .cal-daynum{font-size:11px;color:#6b7280;margin-bottom:3px;font-weight:600}
@@ -198,7 +198,7 @@ tr:hover td{background:#22223a}
 .client-name-big{font-size:16px;font-weight:800;color:#c4b5fd;margin-bottom:4px}
 .client-meta{font-size:12px;color:#6b7280}
 .client-stats{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
-.client-stat{background:#1e1e2e;border-radius:8px;padding:6px 12px;font-size:12px;text-align:center}
+.client-stat{background:#ffffff;border-radius:8px;padding:6px 12px;font-size:12px;text-align:center}
 .client-stat strong{display:block;font-size:16px;color:#a78bfa}
 /* EXPENSE APPROVAL */
 .b-exp-pending{background:#1c1917;color:#fbbf24;border:1px solid #92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
@@ -222,24 +222,24 @@ tr:hover td{background:#22223a}
 .net-pay-pill .np-label{font-size:9px;color:#6b7280;text-transform:uppercase}
 .net-pay-pill .np-val{font-weight:700;font-size:14px}
 /* ===== CHAT SYSTEM ===== */
-.chat-shell{display:grid;grid-template-columns:280px 1fr;gap:0;height:calc(100vh - 160px);min-height:400px;background:#1e1e2e;border:1px solid #2d2d44;border-radius:12px;overflow:hidden}
+.chat-shell{display:grid;grid-template-columns:280px 1fr;gap:0;height:calc(100vh - 160px);min-height:400px;background:#ffffff;border:1px solid #2d2d44;border-radius:12px;overflow:hidden}
 .chat-sidebar{display:flex;flex-direction:column;border-right:1px solid #2d2d44;background:#1a1a2e;overflow:hidden}
 .chat-sidebar-top{display:flex;gap:8px;padding:12px;border-bottom:1px solid #2d2d44;flex-shrink:0}
 #convoList{flex:1;overflow-y:auto}
 .convo-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #22223a;transition:background .15s;position:relative}
 .convo-item:hover{background:#22223a}
-.convo-item.active{background:#1e1b4b;border-left:3px solid #7c3aed}
-.convo-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.convo-item.active{background:#1e1b4b;border-left:3px solid #e5c1b3}
+.convo-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e5c1b3,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .convo-avatar.group{background:linear-gradient(135deg,#0891b2,#0e7490)}
 .convo-info{flex:1;min-width:0}
 .convo-name{font-size:13px;font-weight:600;color:#c4b5fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .convo-preview{font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .convo-time{font-size:10px;color:#4b5563;flex-shrink:0}
-.convo-unread{background:#7c3aed;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;flex-shrink:0}
+.convo-unread{background:#e5c1b3;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;flex-shrink:0}
 .chat-window{display:flex;flex-direction:column;overflow:hidden;background:#0f0f1a;position:relative}
 .chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#4b5563}
-.chat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#1e1e2e;border-bottom:1px solid #2d2d44;flex-shrink:0}
-.chat-header-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.chat-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#ffffff;border-bottom:1px solid #2d2d44;flex-shrink:0}
+.chat-header-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#e5c1b3,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .chat-header-info{flex:1}
 .chat-header-name{font-size:14px;font-weight:700;color:#c4b5fd}
 .chat-header-sub{font-size:11px;color:#6b7280}
@@ -247,29 +247,29 @@ tr:hover td{background:#22223a}
 .msg-group{margin-bottom:10px}
 .msg-bubble-wrap{display:flex;align-items:flex-end;gap:8px;margin-bottom:2px}
 .msg-bubble-wrap.mine{flex-direction:row-reverse}
-.msg-bubble-wrap.mine .msg-bubble{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border-radius:18px 18px 4px 18px}
+.msg-bubble-wrap.mine .msg-bubble{background:linear-gradient(135deg,#e5c1b3,#5b21b6);color:#fff;border-radius:18px 18px 4px 18px}
 .msg-bubble-wrap.theirs .msg-bubble{background:#2a2a3e;color:#e0e0e0;border-radius:18px 18px 18px 4px}
 .msg-bubble{padding:9px 13px;max-width:70%;word-break:break-word;font-size:14px;line-height:1.5;position:relative;cursor:pointer}
 .msg-bubble:hover .msg-actions-bar{opacity:1;pointer-events:all}
 .msg-sender{font-size:11px;font-weight:700;color:#a78bfa;margin-bottom:3px;padding-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 .msg-time{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;text-align:right}
 .msg-bubble-wrap.theirs .msg-time{color:#4b5563;text-align:left}
-.msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;align-self:flex-end}
+.msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#e5c1b3,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;align-self:flex-end}
 .msg-reactions{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;padding-left:4px}
 .reaction-chip{background:#1e1b4b;border:1px solid #4f46e5;border-radius:12px;padding:2px 8px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:all .15s}
 .reaction-chip:hover{background:#312e81}
-.reaction-chip.mine{border-color:#7c3aed;background:#312e81}
+.reaction-chip.mine{border-color:#e5c1b3;background:#312e81}
 .reaction-count{font-size:11px;color:#a78bfa}
 .msg-actions-bar{position:absolute;top:-32px;right:0;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:20px;padding:4px 8px;display:flex;gap:4px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:10;white-space:nowrap}
 .msg-bubble-wrap.mine .msg-actions-bar{right:0;left:auto}
 .msg-action-btn{background:none;border:none;font-size:16px;cursor:pointer;padding:2px 3px;border-radius:4px;transition:background .15s}
 .msg-action-btn:hover{background:#3d3d5c}
-.chat-input-area{padding:10px 12px;background:#1e1e2e;border-top:1px solid #2d2d44;flex-shrink:0}
+.chat-input-area{padding:10px 12px;background:#ffffff;border-top:1px solid #2d2d44;flex-shrink:0}
 .chat-input{flex:1;padding:9px 13px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:20px;color:#e0e0e0;font-size:14px;outline:none;resize:none;max-height:120px;line-height:1.5;font-family:inherit}
-.chat-input:focus{border-color:#7c3aed}
-.chat-send-btn{width:38px;height:38px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.chat-input:focus{border-color:#e5c1b3}
+.chat-send-btn{width:38px;height:38px;background:linear-gradient(135deg,#e5c1b3,#5b21b6);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .emoji-toggle-btn{width:38px;height:38px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.emoji-picker-wrap{background:#1e1e2e;border:1px solid #3d3d5c;border-radius:12px;padding:10px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px;max-height:160px;overflow-y:auto}
+.emoji-picker-wrap{background:#ffffff;border:1px solid #3d3d5c;border-radius:12px;padding:10px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px;max-height:160px;overflow-y:auto}
 .emoji-btn{background:none;border:none;font-size:22px;cursor:pointer;padding:4px;border-radius:6px;transition:background .1s}
 .emoji-btn:hover{background:#2a2a3e}
 .pinned-bar{background:#1e1b4b;border-bottom:1px solid #4f46e5;padding:8px 14px;font-size:12px;color:#a78bfa;display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -277,7 +277,7 @@ tr:hover td{background:#22223a}
 .date-divider::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#2d2d44}
 .date-divider span{background:#0f0f1a;padding:0 10px;position:relative;white-space:nowrap}
 .unread-badge{background:#ef4444;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:4px}
-.pop-notif{position:fixed;bottom:80px;right:16px;background:#1e1e2e;border:1px solid #7c3aed;border-radius:12px;padding:12px 16px;max-width:280px;z-index:4000;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideUp .3s ease;cursor:pointer}
+.pop-notif{position:fixed;bottom:80px;right:16px;background:#ffffff;border:1px solid #e5c1b3;border-radius:12px;padding:12px 16px;max-width:280px;z-index:4000;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideUp .3s ease;cursor:pointer}
 .pop-notif-sender{font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:3px}
 .pop-notif-body{font-size:13px;color:#e0e0e0}
 @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -298,8 +298,8 @@ tr:hover td{background:#22223a}
 .note-meta{font-size:11px;color:#6b7280}
 .note-body{font-size:13px;color:#e0e0e0;line-height:1.6;white-space:pre-wrap}
 .note-mood{font-size:16px}
-.mood-btn{background:#1e1e2e;border:1px solid #3d3d5c;border-radius:20px;color:#9ca3af;padding:5px 12px;font-size:12px;cursor:pointer;transition:all .2s}
-.mood-btn.active{border-color:#7c3aed;color:#a78bfa;background:#1e1b4b}
+.mood-btn{background:#ffffff;border:1px solid #3d3d5c;border-radius:20px;color:#9ca3af;padding:5px 12px;font-size:12px;cursor:pointer;transition:all .2s}
+.mood-btn.active{border-color:#e5c1b3;color:#a78bfa;background:#1e1b4b}
 .lock-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#1a1a2e;border:1px solid #312e81;border-radius:10px;flex-wrap:wrap}
 .lock-icon{font-size:22px}
 .lock-text{flex:1;font-size:13px;color:#c4b5fd}
@@ -310,7 +310,7 @@ tr:hover td{background:#22223a}
 .tips-list li::before{content:"💡 "}
 /* LEADERBOARD */
 .lb-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#2a2a3e;border:1px solid #3d3d5c;border-radius:10px;margin-bottom:8px;transition:all .2s}
-.lb-row:hover{border-color:#7c3aed}
+.lb-row:hover{border-color:#e5c1b3}
 .lb-rank{font-size:22px;width:36px;text-align:center;flex-shrink:0}
 .lb-name{flex:1;font-weight:600;color:#c4b5fd;font-size:14px}
 .lb-amount{color:#4ade80;font-weight:700;font-size:15px}
@@ -319,7 +319,7 @@ tr:hover td{background:#22223a}
 /* GOAL BAR */
 .goal-bar-wrap{background:#1a1a2e;border:1px solid #312e81;border-radius:10px;padding:14px;margin-bottom:12px}
 .goal-bar-track{background:#2a2a3e;border-radius:20px;height:14px;margin:8px 0;overflow:hidden;position:relative}
-.goal-bar-fill{background:linear-gradient(90deg,#7c3aed,#4ade80);border-radius:20px;height:100%;transition:width .6s ease}
+.goal-bar-fill{background:linear-gradient(90deg,#e5c1b3,#4ade80);border-radius:20px;height:100%;transition:width .6s ease}
 .goal-label{display:flex;justify-content:space-between;font-size:12px;color:#9ca3af}
 /* BADGE SHOWCASE */
 .badge-showcase{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
@@ -329,10 +329,10 @@ tr:hover td{background:#22223a}
 /* STREAK */
 .streak-box{display:inline-flex;align-items:center;gap:6px;background:#451a03;border:1px solid #d97706;border-radius:20px;padding:4px 14px;font-size:13px;color:#fcd34d;font-weight:600}
 /* ADMIN MESSAGES */
-.admsg-card{background:#1a1a2e;border:1px solid #7c3aed;border-radius:10px;padding:14px;margin-bottom:10px;position:relative}
+.admsg-card{background:#1a1a2e;border:1px solid #e5c1b3;border-radius:10px;padding:14px;margin-bottom:10px;position:relative}
 .admsg-from{font-size:11px;color:#6b7280;margin-bottom:5px}
 .admsg-body{font-size:14px;color:#c4b5fd;line-height:1.6}
-.admsg-unread{position:absolute;top:10px;right:10px;background:#7c3aed;border-radius:50%;width:8px;height:8px}
+.admsg-unread{position:absolute;top:10px;right:10px;background:#e5c1b3;border-radius:50%;width:8px;height:8px}
 /* FIRED STAFF */
 .staff-card.fired{opacity:.5;border-color:#dc2626}
 .staff-card.fired h4{color:#9ca3af}
@@ -1075,7 +1075,7 @@ tr:hover td{background:#22223a}
               <div style="font-size:48px;margin-bottom:12px">💬</div>
               <div style="font-size:15px;color:#c4b5fd;font-weight:600">Welcome to Team Chat</div>
               <div style="font-size:13px;color:#6b7280;margin-top:6px">Select a conversation or start a new one</div>
-              <div style="font-size:12px;color:#7c3aed;margin-top:14px;display:none" id="chatEmptyMobileHint">👈 Tap here to open your chats</div>
+              <div style="font-size:12px;color:#e5c1b3;margin-top:14px;display:none" id="chatEmptyMobileHint">👈 Tap here to open your chats</div>
             </div>
             <div id="chatMain" style="display:none;flex-direction:column;height:100%">
               <div class="chat-header" id="chatHeader">
@@ -1325,17 +1325,17 @@ tr:hover td{background:#22223a}
 <!-- OFFLINE BAR -->
 <div id="offlineBar" style="position:fixed;top:0;left:0;right:0;background:#d97706;color:#fff;text-align:center;font-size:12px;font-weight:600;padding:5px;z-index:5000;display:none">📡 You are offline — changes will sync when you reconnect</div>
 <!-- INSTALL BANNER -->
-<div id="installBanner" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:14px;padding:12px 20px;align-items:center;gap:12px;z-index:3500;box-shadow:0 8px 32px rgba(124,58,237,.5);max-width:340px;width:90%">
+<div id="installBanner" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#e5c1b3,#5b21b6);border-radius:14px;padding:12px 20px;align-items:center;gap:12px;z-index:3500;box-shadow:0 8px 32px rgba(124,58,237,.5);max-width:340px;width:90%">
   <span style="font-size:28px">💅</span>
   <div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">Install Nita's Salon</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Add to home screen for quick access</div></div>
-  <button onclick="installPWA()" style="background:#fff;color:#7c3aed;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Install</button>
+  <button onclick="installPWA()" style="background:#fff;color:#e5c1b3;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">Install</button>
   <button onclick="dismissInstall()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer">×</button>
 </div>
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="if(event.target===this)closeLightbox()" style="position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;display:none;align-items:center;justify-content:center;flex-direction:column">
   <button onclick="closeLightbox()" style="position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer">×</button>
   <div id="lightboxContent"></div>
-  <a id="lightboxDl" download style="display:none;margin-top:12px;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:14px;cursor:pointer;text-decoration:none">⬇️ Download</a>
+  <a id="lightboxDl" download style="display:none;margin-top:12px;background:#e5c1b3;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:14px;cursor:pointer;text-decoration:none">⬇️ Download</a>
 </div>
 <!-- FILE INPUT -->
 <input type="file" id="fileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" style="display:none" onchange="handleFileSelect(event)">
@@ -3046,7 +3046,7 @@ function renderMyDash(){
   }
   if(myChart)myChart.destroy();
   const ctx=document.getElementById('myDailyChart')?.getContext('2d');
-  if(ctx)myChart=new Chart(ctx,{type:'bar',data:{labels:dayLabels,datasets:[{data:dayData,backgroundColor:'rgba(124,58,237,0.6)',borderColor:'#7c3aed',borderWidth:1}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af',callback:v=>'Ksh '+v.toLocaleString()}},x:{ticks:{color:'#9ca3af',maxRotation:0}}}}});
+  if(ctx)myChart=new Chart(ctx,{type:'bar',data:{labels:dayLabels,datasets:[{data:dayData,backgroundColor:'rgba(124,58,237,0.6)',borderColor:'#e5c1b3',borderWidth:1}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af',callback:v=>'Ksh '+v.toLocaleString()}},x:{ticks:{color:'#9ca3af',maxRotation:0}}}}});
 
   // Weekly chart — last 8 weeks
   const weeks=[];
@@ -3398,27 +3398,27 @@ function buildDailyC(t,from,to){
   while(d<=te){days[d.toISOString().split('T')[0]]=0;d.setDate(d.getDate()+1);}
   t.forEach(x=>{if(x.date&&days[x.date]!==undefined)days[x.date]+=(x.price||0);});
   const ctx=document.getElementById('cDaily')?.getContext('2d');if(!ctx)return;
-  dCharts.daily=new Chart(ctx,{type:'line',data:{labels:Object.keys(days).map(d=>d.slice(5)),datasets:[{label:'Sales',data:Object.values(days),borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.15)',fill:true,tension:0.3,pointRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af',callback:v=>'Ksh '+v.toLocaleString()}},x:{ticks:{color:'#9ca3af',maxTicksLimit:10}}}}});
+  dCharts.daily=new Chart(ctx,{type:'line',data:{labels:Object.keys(days).map(d=>d.slice(5)),datasets:[{label:'Sales',data:Object.values(days),borderColor:'#e5c1b3',backgroundColor:'rgba(124,58,237,.15)',fill:true,tension:0.3,pointRadius:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af',callback:v=>'Ksh '+v.toLocaleString()}},x:{ticks:{color:'#9ca3af',maxTicksLimit:10}}}}});
 }
 
 function buildStaffC(t){
   const m={};t.forEach(x=>{const n=x.staff||'?';m[n]=(m[n]||0)+(x.price||0);});
   const sorted=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const ctx=document.getElementById('cStaff')?.getContext('2d');if(!ctx)return;
-  dCharts.staff=new Chart(ctx,{type:'bar',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:['#7c3aed','#5b21b6','#4f46e5','#2563eb','#0891b2','#059669','#d97706','#dc2626','#c026d3','#0d9488']}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af'}},x:{ticks:{color:'#9ca3af'}}}}});
+  dCharts.staff=new Chart(ctx,{type:'bar',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:['#e5c1b3','#5b21b6','#4f46e5','#2563eb','#0891b2','#059669','#d97706','#dc2626','#c026d3','#0d9488']}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af'}},x:{ticks:{color:'#9ca3af'}}}}});
 }
 
 function buildSvcC(t){
   const m={};t.forEach(x=>{const n=x.service||'?';m[n]=(m[n]||0)+(x.price||0);});
   const sorted=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const ctx=document.getElementById('cSvc')?.getContext('2d');if(!ctx)return;
-  dCharts.svc=new Chart(ctx,{type:'doughnut',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:['#7c3aed','#5b21b6','#4f46e5','#2563eb','#0891b2','#059669','#d97706','#dc2626']}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#9ca3af',font:{size:10}}}}}});
+  dCharts.svc=new Chart(ctx,{type:'doughnut',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:['#e5c1b3','#5b21b6','#4f46e5','#2563eb','#0891b2','#059669','#d97706','#dc2626']}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#9ca3af',font:{size:10}}}}}});
 }
 
 function buildPayC(t){
   const m={};t.forEach(x=>{const n=x.payment||'Cash';m[n]=(m[n]||0)+(x.price||0);});
   const ctx=document.getElementById('cPay')?.getContext('2d');if(!ctx)return;
-  dCharts.pay=new Chart(ctx,{type:'pie',data:{labels:Object.keys(m),datasets:[{data:Object.values(m),backgroundColor:['#7c3aed','#0891b2','#059669','#d97706']}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#9ca3af'}}}}});
+  dCharts.pay=new Chart(ctx,{type:'pie',data:{labels:Object.keys(m),datasets:[{data:Object.values(m),backgroundColor:['#e5c1b3','#0891b2','#059669','#d97706']}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#9ca3af'}}}}});
 }
 
 function buildInsights(t){
@@ -3459,7 +3459,7 @@ function buildShopC(t){
   t.forEach(x=>{const n=x.shop||'Unassigned';m[n]=(m[n]||0)+(x.price||0);});
   const sorted=Object.entries(m).sort((a,b)=>b[1]-a[1]);
   const ctx=document.getElementById('cShop')?.getContext('2d');if(!ctx)return;
-  dCharts.shop=new Chart(ctx,{type:'bar',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:['#7c3aed','#0891b2','#d97706','#059669','#dc2626','#c026d3']}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af',callback:v=>'Ksh '+v.toLocaleString()}},x:{ticks:{color:'#9ca3af'}}}}});
+  dCharts.shop=new Chart(ctx,{type:'bar',data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:['#e5c1b3','#0891b2','#d97706','#059669','#dc2626','#c026d3']}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#9ca3af',callback:v=>'Ksh '+v.toLocaleString()}},x:{ticks:{color:'#9ca3af'}}}}});
 }
 
 function buildShopTable(t,grandTotal){
@@ -3928,10 +3928,10 @@ el.innerHTML=rows.map((r,i)=>{
   const isMe = CU && (CU.role === 'admin' || norm(r.name) === norm(CU.name));
   const streak=r.stats.currentStreak;
 
-  return `<div class="lb-row" style="${isMe?'border-color:#7c3aed;background:#1e1b4b':''}">
+  return `<div class="lb-row" style="${isMe?'border-color:#e5c1b3;background:#1e1b4b':''}">
       <div class="lb-rank">${medals[i]||nums[i-3]||(i+1)}</div>
       <div style="flex:1">
-        <div class="lb-name">${r.name}${isMe?' <span style="font-size:11px;color:#7c3aed">(you)</span>':''}</div>
+        <div class="lb-name">${r.name}${isMe?' <span style="font-size:11px;color:#e5c1b3">(you)</span>':''}</div>
         <div class="lb-badges">
           ${r.badges.map(b=>`<span class="lb-badge" title="${b}">${b.split(' ').pop()}</span>`).join('')}
           ${streak>2?`<span class="streak-box">🔥 ${streak}-day streak</span>`:''}
@@ -3988,13 +3988,13 @@ function renderGoalBar(monthComm){
   </div>`;
   const pct=Math.min(100,Math.round(monthComm/goal*100));
   const remaining=Math.max(0,goal-monthComm);
-  const color=pct>=100?'#4ade80':pct>=70?'#a78bfa':pct>=40?'#fbbf24':'#7c3aed';
+  const color=pct>=100?'#4ade80':pct>=70?'#a78bfa':pct>=40?'#fbbf24':'#e5c1b3';
   return`<div class="goal-bar-wrap">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <div style="font-size:13px;font-weight:600;color:#c4b5fd">🎯 Monthly Goal: Ksh ${goal.toLocaleString()}</div>
       <button class="btn btn-secondary" onclick="openGoalModal()" style="font-size:11px;padding:3px 10px">Edit</button>
     </div>
-    <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,#7c3aed,${color})"></div></div>
+    <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,#e5c1b3,${color})"></div></div>
     <div class="goal-label">
       <span>${pct}% reached</span>
       <span>${pct>=100?'🎉 Goal achieved!':'Ksh '+remaining.toLocaleString()+' to go'}</span>
@@ -4162,7 +4162,7 @@ function openNewChat(){
   const names = getAllNames();
   list.innerHTML = names.map(n=>`
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
-      <input type="checkbox" class="nc-person" value="${n}" style="accent-color:#7c3aed">
+      <input type="checkbox" class="nc-person" value="${n}" style="accent-color:#e5c1b3">
       <span style="font-size:13px;color:#c4b5fd">${n}</span>
     </label>`).join('');
   document.getElementById('ncType').value = 'direct';
@@ -4313,7 +4313,7 @@ function renderChatWindow(convId){
   const others = (conv.participants||[]).filter(p=>p!==CU.name);
   header.innerHTML = `
     ${isMobileChat()?`<button onclick="mobileChatBack()" style="background:#2a2a3e;border:1px solid #3d3d5c;border-radius:8px;color:#a78bfa;padding:5px 10px;font-size:13px;cursor:pointer;margin-right:4px;flex-shrink:0">← Chats</button>`:''}
-    <div class="chat-header-avatar${isGroup?' group':''}" style="background:${isGroup?'linear-gradient(135deg,#0891b2,#0e7490)':'linear-gradient(135deg,#7c3aed,#5b21b6)'}">${isGroup?'👥':others[0]?.[0]?.toUpperCase()||'?'}</div>
+    <div class="chat-header-avatar${isGroup?' group':''}" style="background:${isGroup?'linear-gradient(135deg,#0891b2,#0e7490)':'linear-gradient(135deg,#e5c1b3,#5b21b6)'}">${isGroup?'👥':others[0]?.[0]?.toUpperCase()||'?'}</div>
     <div class="chat-header-info">
       <div class="chat-header-name">${convName(conv)}</div>
       <div class="chat-header-sub">${isGroup?(conv.participants||[]).join(', '):others[0]||''}</div>
@@ -4375,7 +4375,7 @@ function renderChatWindow(convId){
           </div>
           ${reactHtml}
         </div>
-        ${isMine?`<div class="msg-avatar" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">${CU.name[0].toUpperCase()}</div>`:''}
+        ${isMine?`<div class="msg-avatar" style="background:linear-gradient(135deg,#5b21b6,#e5c1b3)">${CU.name[0].toUpperCase()}</div>`:''}
       </div>
     </div>`;
   });
@@ -4989,7 +4989,7 @@ function renderClients(){
     const initials=c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
     return`<div class="client-card">
       <div style="display:flex;align-items:flex-start;gap:12px">
-        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0">${initials}</div>
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e5c1b3,#0891b2);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0">${initials}</div>
         <div style="flex:1;min-width:0">
           <div class="client-name-big">${c.name}</div>
           <div class="client-meta">${c.phone?'📞 '+c.phone+'&nbsp;·&nbsp;':''}${c.preferredStaff?'👤 Prefers '+c.preferredStaff:''}${c.lastVisit?'&nbsp;·&nbsp;Last visit: '+c.lastVisit:''}</div>
@@ -5694,7 +5694,7 @@ window.renderClients = function(){
     const debtBadge=c.debtOwing>0?`<span style="background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3);border-radius:20px;font-size:11px;padding:2px 8px;font-weight:600;margin-left:6px">🔴 Owes Ksh ${c.debtOwing.toLocaleString()}</span>`:'';
     return`<div class="client-card">
       <div style="display:flex;align-items:flex-start;gap:12px">
-        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#0891b2);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0">${initials}</div>
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e5c1b3,#0891b2);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0">${initials}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
             <span class="client-name-big">${c.name}</span>${debtBadge}
@@ -5782,7 +5782,7 @@ window.saveRecurringExpense = async function(){
 function generatePaymentSlip(staffName, period, commission, deduction, payout, owingAfter){
   const date = todayStr();
   const slip = `
-    <div style="font-family:'DM Sans',sans-serif;background:#1a1a2e;border:2px solid #7c3aed;border-radius:14px;padding:24px;max-width:400px;margin:0 auto">
+    <div style="font-family:'DM Sans',sans-serif;background:#1a1a2e;border:2px solid #e5c1b3;border-radius:14px;padding:24px;max-width:400px;margin:0 auto">
       <div style="text-align:center;margin-bottom:16px">
         <div style="font-size:22px;font-weight:800;color:#a78bfa">💅 Nita's Salon</div>
         <div style="font-size:11px;color:#6b7280;letter-spacing:2px;text-transform:uppercase">Commission Payment Slip</div>
@@ -5833,7 +5833,7 @@ function generatePaymentSlip(staffName, period, commission, deduction, payout, o
     // Add print button
     const printBtn = document.createElement('button');
     printBtn.textContent = '🖨️ Print / Screenshot';
-    printBtn.style.cssText = 'margin-top:12px;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;cursor:pointer';
+    printBtn.style.cssText = 'margin-top:12px;background:#e5c1b3;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:14px;cursor:pointer';
     printBtn.onclick = () => { window.print(); };
     lbc.appendChild(printBtn);
   }
