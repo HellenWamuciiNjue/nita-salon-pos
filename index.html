@@ -2732,19 +2732,53 @@ window.openMarkPaidModal = function(staffName, unpaid, debts){
   document.getElementById('mpDebtsTotal').textContent = debts>0 ? `Ksh ${debts.toLocaleString()}` : 'None';
   document.getElementById('mpDeductInput').value = '';
   document.getElementById('mpCalcResult').style.display = 'none';
+  const _bd=document.getElementById('mpBreakdown');if(_bd)_bd.innerHTML='';
   document.getElementById('markPaidModal').classList.add('show');
 };
 
+// Amount that will really be deducted: never more than the unpaid commission or than the staff member owes
+function mpAgreed(){
+  const v=parseFloat(document.getElementById('mpDeductInput')?.value)||0;
+  return Math.max(0,Math.min(v,_mpUnpaid,_mpDebts));
+}
+// Splits an amount over the staff member's outstanding debts, SMALLEST debt first
+function planDeduction(staff,amount){
+  const deds=DEDUCTIONS.filter(d=>norm(d.staff)===norm(staff)&&!dedIsCleared(d))
+    .map(d=>({d,rem:dedRemaining(d)}))
+    .sort((a,b)=>a.rem-b.rem||(a.d.date||'').localeCompare(b.d.date||''));
+  let left=amount;const rows=[];
+  deds.forEach(({d,rem})=>{
+    const apply=Math.max(0,Math.min(left,rem));left-=apply;
+    rows.push({id:d.id,payments:d.payments||[],item:d.item||'Item',date:d.date||'',total:d.total||0,before:rem,apply,after:rem-apply});
+  });
+  return rows;
+}
+function planText(rows){
+  return rows.map(r=>'• '+r.item+': owed '+r.before.toLocaleString()+' → settled '+r.apply.toLocaleString()+' → '+(r.after>0?'still owing '+r.after.toLocaleString():'CLEARED')).join('\n');
+}
+function planHtml(rows){
+  if(!rows.length)return'';
+  return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #1e293b;font-size:12px;color:#94a3b8;margin-bottom:6px">Debts settled (smallest first):</div>'+
+    rows.map(r=>{
+      const status=r.apply<=0?'<span style="color:#6b7280">not touched</span>':(r.after>0?'<span style="color:#fbbf24">Ksh '+r.after.toLocaleString()+' still owing</span>':'<span style="color:#4ade80">✅ cleared</span>');
+      return '<div style="padding:6px 0;border-bottom:1px dashed #1e293b;font-size:12px">'+
+        '<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:#e0e0e0">📦 '+r.item.replace(/</g,'&lt;')+' <span style="color:#6b7280">('+r.date+')</span></span><span style="color:#fb923c">owed '+r.before.toLocaleString()+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px"><span style="color:#4ade80">settled '+r.apply.toLocaleString()+'</span>'+status+'</div></div>';
+    }).join('');
+}
 window.calcMarkPaid = function(){
-  const agreed = Math.min(parseFloat(document.getElementById('mpDeductInput').value)||0, _mpUnpaid);
-  const payout  = _mpUnpaid - agreed;
-  const stillOwes = Math.max(0, _mpDebts - agreed);
-
-  document.getElementById('mpCalcComm').textContent    = `Ksh ${_mpUnpaid.toLocaleString()}`;
-  document.getElementById('mpCalcDeduct').textContent  = `Ksh ${agreed.toLocaleString()}`;
-  document.getElementById('mpCalcPayout').textContent  = `Ksh ${payout.toLocaleString()}`;
-  document.getElementById('mpCalcOwing').textContent   = `Ksh ${stillOwes.toLocaleString()}`;
-  document.getElementById('mpCalcResult').style.display = 'block';
+  const typed=parseFloat(document.getElementById('mpDeductInput').value)||0;
+  const agreed=mpAgreed();
+  const payout=_mpUnpaid-agreed;
+  const stillOwes=Math.max(0,_mpDebts-agreed);
+  document.getElementById('mpCalcComm').textContent   =`Ksh ${_mpUnpaid.toLocaleString()}`;
+  document.getElementById('mpCalcDeduct').textContent =`Ksh ${agreed.toLocaleString()}`;
+  document.getElementById('mpCalcPayout').textContent =`Ksh ${payout.toLocaleString()}`;
+  document.getElementById('mpCalcOwing').textContent  =`Ksh ${stillOwes.toLocaleString()}`;
+  const note=typed>agreed&&agreed>=0
+    ?`<div style="font-size:11px;color:#fbbf24;margin-bottom:6px">⚠️ Limited to Ksh ${agreed.toLocaleString()} (${typed>_mpDebts?'that is all they owe':'that is all the unpaid commission'}).</div>`:'';
+  document.getElementById('mpBreakdown').innerHTML=note+planHtml(planDeduction(_mpStaff,agreed));
+  document.getElementById('mpCalcResult').style.display='block';
 };
 
 window.confirmMarkPaid = async function(){
@@ -5996,7 +6030,7 @@ window.saveRecurringExpense = async function(){
 // FEATURE 5 — PAYMENT SLIP GENERATOR
 // Called after Mark Paid is confirmed
 // ════════════════════════════════════════════════════════════════
-function generatePaymentSlip(staffName, period, commission, deduction, payout, owingAfter){
+function generatePaymentSlip(staffName, period, commission, deduction, payout, owingAfter, plan){
   const date = todayStr();
   const slip = `
     <div style="font-family:'DM Sans',sans-serif;background:#1a1a2e;border:2px solid #e5c1b3;border-radius:14px;padding:24px;max-width:400px;margin:0 auto">
@@ -6036,6 +6070,13 @@ function generatePaymentSlip(staffName, period, commission, deduction, payout, o
           <span style="color:${owingAfter>0?'#f87171':'#4ade80'};font-weight:600">Ksh ${owingAfter.toLocaleString()}</span>
         </div>
       </div>
+      ${(plan&&plan.some(r=>r.apply>0))?`<div style="margin-bottom:14px">
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">Debts settled from this payment</div>
+        ${plan.filter(r=>r.apply>0).map(r=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dashed #2a2a3e;font-size:12px">
+          <span style="color:#e0e0e0">📦 ${r.item}</span>
+          <span style="text-align:right"><span style="color:#4ade80">- Ksh ${r.apply.toLocaleString()}</span><br><span style="color:${r.after>0?'#fbbf24':'#4ade80'};font-size:11px">${r.after>0?'Ksh '+r.after.toLocaleString()+' still owing':'✅ cleared'}</span></span>
+        </div>`).join('')}
+      </div>`:''}
       <div style="text-align:center;font-size:11px;color:#4b5563;padding-top:10px;border-top:1px solid #2a2a3e">
         Generated by Nita's Salon POS · ${date}
       </div>
@@ -6060,19 +6101,21 @@ window.generatePaymentSlip = generatePaymentSlip;
 // Hook into confirmMarkPaid to auto-generate slip
 const _origConfirmMarkPaid = window.confirmMarkPaid;
 window.confirmMarkPaid = async function(){
-  const agreed  = Math.min(parseFloat(document.getElementById('mpDeductInput')?.value)||0, _mpUnpaid);
-  const payout  = _mpUnpaid - agreed;
-  const stillOwes = Math.max(0, _mpDebts - agreed);
+  const agreed   = mpAgreed();
+  const payout   = _mpUnpaid - agreed;
+  const stillOwes= Math.max(0, _mpDebts - agreed);
   const from = document.getElementById('cpFrom')?.value||'';
   const to   = document.getElementById('cpTo')?.value||'';
   const period = from&&to ? `${from} to ${to}` : 'Selected period';
+  const plan = planDeduction(_mpStaff, agreed);
 
   if(!confirm(
     `Confirm payment for ${_mpStaff}:\n\n`+
     `Commission:       Ksh ${_mpUnpaid.toLocaleString()}\n`+
     `Deduction:        Ksh ${agreed.toLocaleString()}\n`+
     `Payout (in hand): Ksh ${payout.toLocaleString()}\n`+
-    `Still Owes After: Ksh ${stillOwes.toLocaleString()}\n\n`+
+    (plan.length&&agreed>0?`\nDebts settled (smallest first):\n${planText(plan)}\n`:'')+
+    `\nStill owes after: Ksh ${stillOwes.toLocaleString()}\n\n`+
     `Transactions for this period will be marked as PAID. Continue?`
   )) return;
 
@@ -6084,29 +6127,21 @@ window.confirmMarkPaid = async function(){
     );
     const updates = toMark.map(t=>updateDoc(doc(db,'transactions',t.id),{adminStatus:'APPROVED'}));
 
-    if(agreed>0){
-      const outstandingDeds=DEDUCTIONS
-        .filter(d=>norm(d.staff)===norm(_mpStaff)&&!dedIsCleared(d))
-        .map(d=>({...d,_rem:dedRemaining(d)}))
-        .sort((a,b)=>a._rem-b._rem);
-      let rem=agreed;
-      for(const d of outstandingDeds){
-        if(rem<=0) break;
-        const apply=Math.min(rem,d._rem);
-        rem-=apply;
-        const newPayments=[...(d.payments||[]),{
-          amount:apply, date:todayStr(),
-          note:`Deducted from commission (${todayStr()})`,
-          recordedBy:'Admin'
-        }];
-        updates.push(updateDoc(doc(db,'deductions',d.id),{payments:newPayments}));
-      }
-    }
+    // Record each part of the deduction against the matching debt
+    plan.filter(r=>r.apply>0).forEach(r=>{
+      const newPayments=[...r.payments,{
+        amount:r.apply, date:todayStr(),
+        note:`Deducted from commission (${todayStr()})`,
+        recordedBy:'Admin'
+      }];
+      updates.push(updateDoc(doc(db,'deductions',r.id),{payments:newPayments}));
+    });
 
-    // Send notification to staff
     updates.push(sendNotification(
       _mpStaff,
-      `💵 Commission paid for ${period}. Commission: Ksh ${_mpUnpaid.toLocaleString()} · Deduction: Ksh ${agreed.toLocaleString()} · In Hand: Ksh ${payout.toLocaleString()}${stillOwes>0?` · Still owe: Ksh ${stillOwes.toLocaleString()}`:''}`,
+      `💵 Commission paid for ${period}. Commission: Ksh ${_mpUnpaid.toLocaleString()} · Deduction: Ksh ${agreed.toLocaleString()} · In Hand: Ksh ${payout.toLocaleString()}`+
+      (agreed>0?` · Settled: ${plan.filter(r=>r.apply>0).map(r=>r.item+' Ksh '+r.apply.toLocaleString()+(r.after>0?' (left '+r.after.toLocaleString()+')':' (cleared)')).join(', ')}`:'')+
+      (stillOwes>0?` · Still owe: Ksh ${stillOwes.toLocaleString()}`:''),
       'payment'
     ));
 
@@ -6114,9 +6149,7 @@ window.confirmMarkPaid = async function(){
     document.getElementById('markPaidModal')?.classList.remove('show');
     showToast(`✅ ${_mpStaff} paid — Ksh ${payout.toLocaleString()} in hand`);
     renderCommissions();
-
-    // Generate payment slip
-    setTimeout(()=>generatePaymentSlip(_mpStaff, period, _mpUnpaid, agreed, payout, stillOwes), 400);
+    setTimeout(()=>generatePaymentSlip(_mpStaff, period, _mpUnpaid, agreed, payout, stillOwes, plan), 400);
 
   }catch(e){ showToast('Error: '+e.message,true); }
 };
@@ -6318,7 +6351,7 @@ window.showMonthlySummary = function(){
     </div>
 
     <!-- Live result -->
-    <div id="mpCalcResult" style="display:none;background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;padding:14px;margin-bottom:16px">
+    <div id="mpCalcResult" style="display:none;background:#0f172a;border:1px solid #1e3a5f;border-radius:10px;padding:14px;margin-bottom:16px;max-height:45vh;overflow:auto">
       <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e293b">
         <span style="font-size:13px;color:#94a3b8">💰 Commission Earned</span>
         <span style="font-size:14px;font-weight:700;color:#a78bfa" id="mpCalcComm">Ksh 0</span>
@@ -6335,6 +6368,7 @@ window.showMonthlySummary = function(){
         <span style="font-size:13px;color:#94a3b8">🔴 Still Owes After</span>
         <span style="font-size:14px;font-weight:700;color:#f87171" id="mpCalcOwing">Ksh 0</span>
       </div>
+      <div id="mpBreakdown"></div>
     </div>
 
     <div class="modal-actions">
