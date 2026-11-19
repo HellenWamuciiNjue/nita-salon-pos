@@ -421,18 +421,34 @@ tr:hover td{background:#22223a}
       <div class="form-group"><label>📅 Date <span style="font-size:10px;color:#a0a0c0;font-weight:400">(Admin: change to correct date)</span></label><input type="date" id="eDate"></div>
       <div class="form-group"><label>Service</label><select id="eSvc" onchange="calcEditComm()"></select></div>
     </div>
-    <div class="form-row">
+        <div class="form-row">
       <div class="form-group"><label>Price (Ksh)</label><input type="number" id="ePrice" oninput="calcEditComm()"></div>
       <div class="form-group"><label>Payment</label>
-        <select id="ePayment"><option>KCB</option><option>Cash</option><option>M-Pesa</option><option>Other</option></select>
+        <select id="ePayment" onchange="toggleEditPaymentDetails()">
+          <option>KCB</option><option>Cash</option><option>M-Pesa</option><option>Other</option>
+        </select>
       </div>
     </div>
+
+    <!-- Paste the payment-time/sender fields here -->
+    <div class="form-row" id="ePaymentDetails" style="display:none">
+      <div class="form-group">
+        <label>Paid At Time</label>
+        <input type="time" id="ePaidTime">
+      </div>
+      <div class="form-group">
+        <label>Sender Name</label>
+        <input type="text" id="eSenderName" placeholder="e.g. M-Pesa sender name">
+      </div>
+    </div>
+
     <div class="form-row">
       <div class="form-group"><label>Bill Status</label>
         <select id="eStatus" onchange="toggleEditClient()">
           <option value="PAID">Paid</option><option value="DEBT">Debt</option>
         </select>
       </div>
+      <!-- The Client Name field follows here -->
       <div class="form-group" id="eClientGrp" style="display:none">
         <label>Client Name (required)</label>
         <input type="text" id="eClient" placeholder="e.g. Mama Blessings">
@@ -2203,31 +2219,62 @@ function addEntry(){
   const idx=c.children.length;
   const opts=SVCS.map(s=>`<option value="${s.n}">${s.n}</option>`).join('');
   const d=document.createElement('div');
-  d.className='entry-row';d.id='er'+idx;
+  d.className='entry-row';
+  d.id='er'+idx;
   d.innerHTML=`
     <div class="entry-num">#${idx+1}</div>
     ${idx>0?`<button class="entry-remove" onclick="removeEntry(${idx})">×</button>`:''}
     <div class="form-row" style="margin-bottom:8px">
-      <div class="form-group"><label>Service</label>
-        <select class="es" data-i="${idx}" onchange="calcEC(${idx})"><option value="">Select...</option>${opts}</select>
+      <div class="form-group">
+        <label>Service</label>
+        <select class="es" data-i="${idx}" onchange="calcEC(${idx})">
+          <option value="">Select...</option>${opts}
+        </select>
       </div>
-      <div class="form-group"><label>Price (Ksh)</label>
+      <div class="form-group">
+        <label>Price (Ksh)</label>
         <input type="number" class="ep" data-i="${idx}" placeholder="0" oninput="calcEC(${idx})">
       </div>
-      <div class="form-group"><label>Payment</label>
-        <select class="epm" data-i="${idx}"><option>KCB</option><option>Cash</option><option>M-Pesa</option><option>Other</option></select>
+      <div class="form-group">
+        <label>Payment</label>
+        <select class="epm" data-i="${idx}" onchange="togglePaymentDetails(${idx})">
+          <option>KCB</option>
+          <option>Cash</option>
+          <option>M-Pesa</option>
+          <option>Other</option>
+        </select>
       </div>
-      <div class="form-group"><label>Shop Branch *</label>
+      <div class="form-group">
+        <label>Shop Branch *</label>
         <select class="eshop" data-i="${idx}">
           <option value="">Select Shop...</option>
           ${SHOPS.map(s=>`<option value="${s}">${s}</option>`).join('')}
         </select>
       </div>
     </div>
+
+    <div class="form-row" id="paymentDetails${idx}" style="display:none">
+      <div class="form-group">
+        <label>Paid At Time <span style="opacity:.7">(enter time or sender name)</span></label>
+        <input type="time" class="epTime" data-i="${idx}">
+      </div>
+      <div class="form-group">
+        <label>Sender Name <span style="opacity:.7">(if you don't know the time)</span></label>
+        <input type="text" class="epSender" data-i="${idx}" placeholder="e.g. name of M-Pesa sender">
+      </div>
+    </div>
+    <div class="form-row" id="paymentDetailsHint${idx}" style="display:none">
+      <div style="font-size:11px;color:#fbbf24">
+        For non-cash payments, enter either the payment time or the sender's name.
+      </div>
+    </div>
+
     <div class="form-row">
-      <div class="form-group"><label>Bill Status</label>
+      <div class="form-group">
+        <label>Bill Status</label>
         <select class="est" data-i="${idx}" onchange="toggleEC(${idx})">
-          <option value="PAID">Paid</option><option value="DEBT">Debt</option>
+          <option value="PAID">Paid</option>
+          <option value="DEBT">Debt</option>
         </select>
       </div>
       <div class="form-group client-row" id="cr${idx}">
@@ -2236,13 +2283,40 @@ function addEntry(){
       </div>
     </div>
     <div class="entry-comm" id="ec${idx}">Commission: Ksh 0</div>`;
+
   c.appendChild(d);
+
+  // The current default payment is KCB, so show the details immediately.
+  togglePaymentDetails(idx);
+
   // Auto-select shop based on currently selected staff
   const staffName=document.getElementById('sStaff')?.value||(CU&&CU.name)||'';
   const shopEl=d.querySelector('.eshop');
   if(shopEl&&staffName)shopEl.value=shopForStaff(staffName);
 }
 window.addEntry=addEntry;
+
+function togglePaymentDetails(idx){
+  const row=document.getElementById('er'+idx);
+  if(!row)return;
+
+  const payment=row.querySelector('.epm')?.value||'Cash';
+  const details=document.getElementById('paymentDetails'+idx);
+  const hint=document.getElementById('paymentDetailsHint'+idx);
+  const isNonCash=payment!=='Cash';
+
+  if(details)details.style.display=isNonCash?'grid':'none';
+  if(hint)hint.style.display=isNonCash?'block':'none';
+
+  // Clear these when switching to cash so stale details aren't saved.
+  if(!isNonCash){
+    const timeInput=row.querySelector('.epTime');
+    const senderInput=row.querySelector('.epSender');
+    if(timeInput)timeInput.value='';
+    if(senderInput)senderInput.value='';
+  }
+}
+window.togglePaymentDetails=togglePaymentDetails;
 
 function autoFillShopFromStaff(){
   const staffName=document.getElementById('sStaff')?.value||'';
@@ -2307,6 +2381,8 @@ async function saveSale(){
     const svc=rows[i].querySelector('.es')?.value;
     const price=parseFloat(rows[i].querySelector('.ep')?.value)||0;
     const payment=rows[i].querySelector('.epm')?.value||'KCB';
+    const paidTime=rows[i].querySelector('.epTime')?.value||'';
+    const senderName=rows[i].querySelector('.epSender')?.value?.trim()||'';
     const shop=rows[i].querySelector('.eshop')?.value||'';
     const status=rows[i].querySelector('.est')?.value||'PAID';
     const client=rows[i].querySelector('.ecn')?.value?.trim()||'';
@@ -2321,6 +2397,13 @@ async function saveSale(){
       btn.disabled=false; btn.textContent='💾 Save Transaction(s)';
       _savingInProgress=false; return;
     }
+    if(status==='PAID'&&payment!=='Cash'&&!paidTime&&!senderName){
+      showToast(`Entry #${i+1}: Enter payment time or sender name`,true);
+      btn.disabled=false;
+      btn.textContent='💾 Save Transaction(s)';
+     _savingInProgress=false;
+     return;
+}
     const s=getSvc(svc);const r=s?s.r:0;
     // Layer 2: Duplicate fingerprint — hash of staff+date+service+price+timestamp-bucket
     // Two saves of the same thing within 60 seconds share the same fingerprint
@@ -2328,7 +2411,11 @@ async function saveSale(){
     const fingerprint=`${staffV}|${dateV}|${svc}|${price}|${bucket}`;
     toSave.push({
       date:dateV,staff:staffV,shop,service:svc,price,
-      commission:Math.round(price*r/100),payment,status,
+      commission:Math.round(price*r/100),
+      payment,
+      paidTime:status==='PAID'&&payment!=='Cash'?paidTime:'',
+      senderName:status==='PAID'&&payment!=='Cash'?senderName:'',
+      status,
       clientName:client,notes:'',seeded:false,adminStatus:'PENDING',
       createdAt:new Date().toISOString(),
       _fp:fingerprint // stored so we can detect dupes in Firebase
@@ -3033,36 +3120,53 @@ window.renderDeductions=renderDeductions;
 function openEdit(id){
   const t=TX.find(x=>x.id===id);
   if(!t)return;
-  if(!isEditable(t)){showToast('Transactions older than 24 hours cannot be edited',true);return;}
+  if(!isEditable(t)){
+    showToast('Transactions older than 24 hours cannot be edited',true);
+    return;
+  }
+
   document.getElementById('eTxId').value=id;
   document.getElementById('eDate').value=t.date;
+
   const sel=document.getElementById('eSvc');
-  sel.innerHTML=SVCS.map(s=>`<option value="${s.n}"${s.n===t.service?' selected':''}>${s.n}</option>`).join('');
+  sel.innerHTML=SVCS.map(s=>
+    `<option value="${s.n}"${s.n===t.service?' selected':''}>${s.n}</option>`
+  ).join('');
+
   document.getElementById('ePrice').value=t.price;
   document.getElementById('ePayment').value=t.payment||'Cash';
+  document.getElementById('ePaidTime').value=t.paidTime||'';
+  document.getElementById('eSenderName').value=t.senderName||'';
   document.getElementById('eStatus').value=t.status==='DEBT'?'DEBT':'PAID';
   document.getElementById('eClient').value=t.clientName||'';
-  toggleEditClient();calcEditComm();
+
+  toggleEditClient();
+  toggleEditPaymentDetails();
+  calcEditComm();
   document.getElementById('editModal').classList.add('show');
 }
 window.openEdit=openEdit;
 
-function closeEditModal(){document.getElementById('editModal').classList.remove('show');}
-window.closeEditModal=closeEditModal;
+function toggleEditPaymentDetails(){
+  const payment=document.getElementById('ePayment').value;
+  const details=document.getElementById('ePaymentDetails');
+
+  if(details){
+    details.style.display=payment==='Cash'?'none':'grid';
+  }
+
+  if(payment==='Cash'){
+    document.getElementById('ePaidTime').value='';
+    document.getElementById('eSenderName').value='';
+  }
+}
+window.toggleEditPaymentDetails=toggleEditPaymentDetails;
 
 function toggleEditClient(){
   const v=document.getElementById('eStatus').value;
   document.getElementById('eClientGrp').style.display=v==='DEBT'?'flex':'none';
 }
 window.toggleEditClient=toggleEditClient;
-
-function calcEditComm(){
-  const svc=document.getElementById('eSvc').value;
-  const price=parseFloat(document.getElementById('ePrice').value)||0;
-  const s=getSvc(svc);const r=s?s.r:0;
-  document.getElementById('eCommVal').textContent=`Ksh ${Math.round(price*r/100).toLocaleString()} (${r}%)`;
-}
-window.calcEditComm=calcEditComm;
 
 async function saveEdit(){
   const id=document.getElementById('eTxId').value;
@@ -3072,18 +3176,47 @@ async function saveEdit(){
   const payment=document.getElementById('ePayment').value;
   const status=document.getElementById('eStatus').value;
   const client=document.getElementById('eClient').value.trim();
-  if(!date){showToast('Please select a date',true);return;}
-  if(status==='DEBT'&&!client){showToast('Client name required for debt',true);return;}
-  const s=getSvc(svc);const r=s?s.r:0;
+  const paidTime=document.getElementById('ePaidTime').value;
+  const senderName=document.getElementById('eSenderName').value.trim();
+
+  if(!date){
+    showToast('Please select a date',true);
+    return;
+  }
+
+  if(status==='DEBT'&&!client){
+    showToast('Client name required for debt',true);
+    return;
+  }
+
+  if(status==='PAID'&&payment!=='Cash'&&!paidTime&&!senderName){
+    showToast('Enter payment time or sender name',true);
+    return;
+  }
+
+  const s=getSvc(svc);
+  const r=s?s.r:0;
   const comm=Math.round(price*r/100);
+
   try{
     await updateDoc(doc(db,'transactions',id),{
-      date,service:svc,price,commission:comm,
-      payment,status,clientName:client,
+      date,
+      service:svc,
+      price,
+      commission:comm,
+      payment,
+      paidTime:status==='PAID'&&payment!=='Cash'?paidTime:'',
+      senderName:status==='PAID'&&payment!=='Cash'?senderName:'',
+      status,
+      clientName:client,
       updatedAt:new Date().toISOString()
     });
-    closeEditModal();showToast('✅ Transaction updated!');
-  }catch(e){showToast('Error: '+e.message,true);}
+
+    closeEditModal();
+    showToast('✅ Transaction updated!');
+  }catch(e){
+    showToast('Error: '+e.message,true);
+  }
 }
 window.saveEdit=saveEdit;
 
