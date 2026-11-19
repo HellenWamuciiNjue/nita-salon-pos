@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+/* If a saved session exists, hide the login screen immediately so a refresh never flashes it */
+(function(){try{var s=JSON.parse(localStorage.getItem('nitaSession')||'null');if(s&&s.name)document.documentElement.classList.add('restoring');}catch(e){}})();
+</script>
+<style>html.restoring #loginScreen{display:none}html.restoring body{background:#0f0f1a}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -366,14 +371,15 @@ tr:hover td{background:#22223a}
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <h1 style="display: flex; align-items: center; gap: 12px;">
+    <h1 style="display: flex; align-items: center; justify-content: center; gap: 12px;">
   <img 
     src="nita.jpg" 
     alt="Nita's Salon" 
-    style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: 25% 50%;"
+    style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; object-position: 25% 50%;"
   >
   Nita's Salon POS
 </h1>
+
     <p class="subtitle">Sign in to continue</p>
     <input type="text" id="lName" placeholder="Your Name" autocomplete="on">
     <input type="password" id="lPass" placeholder="Password">
@@ -799,7 +805,7 @@ tr:hover td{background:#22223a}
             <table>
               <thead><tr>
                 <th>Date</th><th>Staff</th><th>Service</th><th>Shop</th><th>Commission</th>
-                <th>Payment</th><th>Bill</th><th id="txActHead"></th>
+                <th>Payment</th><th>Pay Time</th><th>Bill</th><th id="txActHead"></th>
               </tr></thead>
               <tbody id="txBody"></tbody>
             </table>
@@ -950,7 +956,7 @@ tr:hover td{background:#22223a}
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Date</th><th>Staff</th><th>Service</th><th>Shop</th><th>Price (Ksh)</th><th>Commission (Ksh)</th><th>Payment</th><th>Bill</th><th>Comm.Status</th></tr></thead>
+              <thead><tr><th>Date</th><th>Staff</th><th>Service</th><th>Shop</th><th>Price (Ksh)</th><th>Commission (Ksh)</th><th>Payment</th><th>Pay Time</th><th>Bill</th><th>Comm.Status</th></tr></thead>
               <tbody id="rBody"></tbody>
             </table>
           </div>
@@ -1332,27 +1338,25 @@ window.onerror=(msg,src,line)=>{console.error('App error:',msg,'@',src+':'+line)
 window.onunhandledrejection=e=>{console.error('Promise rejection:',e.reason);};
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getDocsFromCache, collection, getDocs, addDoc, doc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const FB={apiKey:"AIzaSyAUro-kFbmFoSb26Qy2fAaUc_-vVqhsiUI",authDomain:"worktap-c601a.firebaseapp.com",projectId:"worktap-c601a",storageBucket:"worktap-c601a.firebasestorage.app",messagingSenderId:"542031965629",appId:"1:542031965629:web:5062f2874e6028e17636d4"};
 const fbApp=initializeApp(FB);
-const db=getFirestore(fbApp);
+// Persistent local cache: after the first load, every collection is served from the device
+// instantly on refresh, and Firebase only sends what changed. Must be set up before any read.
+let db;
+try{
+  db=initializeFirestore(fbApp,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+}catch(e){
+  console.warn('Persistent cache unavailable, using default Firestore',e);
+  db=getFirestore(fbApp);
+}
 // Store storage ref globally for file upload
 import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js").then(({getStorage,ref,uploadBytesResumable,getDownloadURL})=>{
   window._storage=getStorage(fbApp);
   window._fbStorage={ref,uploadBytesResumable,getDownloadURL};
 });
-// Enable offline persistence safely
-import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js").then(({enableIndexedDbPersistence})=>{
-  enableIndexedDbPersistence(db).catch(e => {
-    // Safely log to console instead of letting it become an unhandled promise rejection
-    console.warn("Offline persistence note (safely bypassed):", e.message || e);
-  });
-}).catch(err => {
-  console.warn("Firestore module import note:", err);
-});
-
 // ===== SERVICES =====
 let SVCS=[
   {n:"Acrylics",r:40},{n:"Bandika",r:50},{n:"Beard",r:40},{n:"Blow Out",r:30},
@@ -1503,6 +1507,25 @@ const SHOPS=['Main Salon','Spa','Back Salon'];
 const norm=n=>(n||'').toLowerCase().replace(/\s+/g,' ').trim();
 const todayStr=()=>new Date().toISOString().split('T')[0];
 const getSvc=n=>SVCS.find(s=>s.n===n);
+const fmtPayTime=t=>{
+  if(!t)return'—';
+  const esc=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const pay=t.payment||'Cash';
+  const digital=pay==='M-Pesa'||pay==='KCB';
+  let time=t.paidTime||'';
+  const m=/^(\d{1,2}):(\d{2})/.exec(time);
+  if(m){let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;time=h+':'+m[2]+' '+ap;}
+  const who=(t.senderName||'').trim();
+  if(!time&&!who){
+    return(digital&&t.status==='PAID')
+      ?'<span style="color:#fbbf24;font-size:11px">not recorded</span>'
+      :'—';
+  }
+  let out='';
+  if(time)out+='<div style="white-space:nowrap">🕐 '+esc(time)+'</div>';
+  if(who)out+='<div style="color:#9ca3af;font-size:11px;white-space:nowrap">👤 '+esc(who)+'</div>';
+  return out;
+};
 const isEditable=t=>{
   if(!t||!t.date)return false;
   if(CU&&CU.role==='admin')return true; // Admin can edit any transaction at any time
@@ -1514,9 +1537,19 @@ const isEditable=t=>{
 // load we pull the real roster/menu from Firestore so additions/removals
 // survive a refresh instead of resetting to the hardcoded list.
 const rosterKey=n=>norm(n).replace(/\s+/g,'_');
+// Serve from the local cache instantly when we have it, and refresh from the server in the background.
+async function getDocsCacheFirst(col,onFresh){
+  try{
+    const c=await getDocsFromCache(col);
+    if(!c.empty){getDocs(col).then(onFresh).catch(()=>{});return c;}
+  }catch(e){}
+  return await getDocs(col);
+}
 async function loadStaffRoster(){
   try{
-    const snap=await getDocs(collection(db,'staffRoster'));
+    const snap=await getDocsCacheFirst(collection(db,'staffRoster'),f=>{
+      if(!f.empty){const l=[];f.forEach(d=>l.push(d.data()));STAFF=l;}
+    });
     if(snap.empty){
       // First run ever: push the hardcoded defaults into Firestore so they persist from now on.
       await Promise.all(STAFF.map(s=>setDoc(doc(db,'staffRoster',rosterKey(s.name)),s)));
@@ -1531,7 +1564,9 @@ const staffRosterReady=loadStaffRoster();
 
 async function loadServiceMenu(){
   try{
-    const snap=await getDocs(collection(db,'serviceMenu'));
+    const snap=await getDocsCacheFirst(collection(db,'serviceMenu'),f=>{
+      if(!f.empty){const l=[];f.forEach(d=>l.push(d.data()));SVCS=l;}
+    });
     if(snap.empty){
       await Promise.all(SVCS.map(s=>setDoc(doc(db,'serviceMenu',rosterKey(s.n)),s)));
     }else{
@@ -1558,6 +1593,7 @@ window.doLogin = async function(){
       document.getElementById('lErr').textContent='Your account is no longer active. Please contact the salon manager.';return;
     }
     CU=user;
+    try{localStorage.setItem('nitaSession',JSON.stringify({name:user.name,page:''}));}catch(e){}
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
     document.getElementById('uBadge').textContent=user.name+(user.role==='admin'?' 👑':'');
@@ -1579,6 +1615,8 @@ window.doLogout=function(){
   if(typeof chatUnsubMsgs!=='undefined'&&chatUnsubMsgs)try{chatUnsubMsgs();}catch(e){}
   if(typeof unsubSales!=='undefined'&&unsubSales)try{unsubSales();}catch(e){}
   if(typeof unsubClients!=='undefined'&&unsubClients)try{unsubClients();}catch(e){}
+  try{localStorage.removeItem('nitaSession');}catch(e){}
+  document.documentElement.classList.remove('restoring');
   CU=null;TX=[];DAYOFFS=[];DEDUCTIONS=[];EXPENSES=[];SALES=[];
   if(typeof activeConvoId!=='undefined')activeConvoId=null;
   document.getElementById('loginScreen').style.display='flex';
@@ -1588,6 +1626,41 @@ window.doLogout=function(){
   document.getElementById('lErr').textContent='';
 };
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none')window.doLogin();});
+
+// ===== RESTORE SESSION ON REFRESH =====
+// Users stay signed in until they personally press Sign Out. Nothing here ever clears the session.
+window.addEventListener('load',async()=>{
+  const root=document.documentElement;
+  let sess=null;
+  try{sess=JSON.parse(localStorage.getItem('nitaSession')||'null');}catch(e){}
+  if(!sess||!sess.name||CU){root.classList.remove('restoring');return;}
+  let user=null;
+  try{
+    await Promise.all([staffRosterReady,svcMenuReady]);
+    user=STAFF.find(s=>s.name.toLowerCase()===sess.name.toLowerCase())||null;
+  }catch(err){console.error('Session restore failed:',err);}
+  if(!user){
+    // Could not restore right now (e.g. offline). Show the login form but keep the saved session for the next refresh.
+    root.classList.remove('restoring');
+    return;
+  }
+  CU=user;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('uBadge').textContent=user.name+(user.role==='admin'?' 👑':'');
+  root.classList.remove('restoring');
+  try{
+    await initApp();
+    const p=sess.page;
+    if(p&&document.getElementById('page-'+p)){
+      const nav=document.querySelector('[data-p="'+p+'"]');
+      const bnav=document.querySelector('[data-bp="'+p+'"]');
+      if((nav&&nav.style.display!=='none')||bnav)goPage(p);
+    }
+  }catch(err){
+    console.error('Error while loading data after refresh (staying signed in):',err);
+  }
+});
 
 // ===== INIT =====
 async function initApp(){
@@ -1618,46 +1691,43 @@ async function initApp(){
   await loadData();
 }
 
-async function loadData(){
-  // Load all Firebase data in parallel
-  await Promise.all([
-    loadStaffStatus(),
-    loadGoals(),
-    loadMsgs(),
-  ]);
-  // Load transactions
-  try{
-    const snap=await getDocs(collection(db,'transactions'));
-    const rows=[];snap.forEach(d=>rows.push(patchShopIfMissing({...d.data(),id:d.id})));
-    if(rows.length===0){await seedDB();}else{TX=rows;onDataReady();}
-    startListener();
-  }catch(e){console.error(e);TX=SEED_TRANSACTIONS.map(patchShopIfMissing);onDataReady();}
-  // Load day offs
-  try{
-    const doSnap=await getDocs(collection(db,'dayoffs'));
-    DAYOFFS=[];doSnap.forEach(d=>DAYOFFS.push({...d.data(),id:d.id}));
-    startDOListener();
-  }catch(e){DAYOFFS=[];}
-  // Load notes + pin for staff
-  if(CU&&CU.role!=='admin'){
-    await Promise.all([loadMyPin(), loadMyNotes()]);
+function showDataLoading(){
+  let el=document.getElementById('dataLoading');
+  if(!el){
+    el=document.createElement('div');el.id='dataLoading';
+    el.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:99999;background:#1a1a2e;border:1px solid #a78bfa;color:#e0e0e0;padding:8px 16px;border-radius:20px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+    el.textContent='⏳ Loading your data…';
+    document.body.appendChild(el);
   }
-  // Load deductions
-  fillDedStaffSelects();
+  el.style.display='block';
+}
+function hideDataLoading(){const el=document.getElementById('dataLoading');if(el)el.style.display='none';}
+window.hideDataLoading=hideDataLoading;
+
+async function loadData(){
+  showDataLoading();
+  setTimeout(hideDataLoading,60000);
+  // Start every listener immediately and in parallel (instead of one slow step after another).
+  // With the local cache, each one fires instantly with what's saved on the device and then
+  // quietly updates when Firebase answers.
+  startListener();
+  startDOListener();
   startDeductListener();
-  // Start expense listener
   startExpenseListener();
-  fillExpStaffFilter();
-  // Start sales listener
   startSalesListener();
-  // Start client listeners
   startClientListener();
-  // init sales date range
   const slFromEl=document.getElementById('slFrom');const slToEl=document.getElementById('slTo');
   const td=todayStr();
   if(slFromEl)slFromEl.value=td.substring(0,7)+'-01';
   if(slToEl)slToEl.value=td;
-  // Start chat listeners
+  await Promise.all([
+    loadStaffStatus(),
+    loadGoals(),
+    loadMsgs(),
+    (CU&&CU.role!=='admin')?Promise.all([loadMyPin(),loadMyNotes()]):null
+  ]);
+  fillDedStaffSelects();
+  fillExpStaffFilter();
   startChatListeners();
   updateChatBadge();
 }
@@ -1720,9 +1790,11 @@ function scheduleDataReady(){
 function startListener(){
   if(unsub)try{unsub();}catch(e){}
   unsub=onSnapshot(collection(db,'transactions'),snap=>{
+    if(snap.empty&&!snap.metadata.fromCache&&!window._seedChecked){window._seedChecked=true;seedDB();return;}
     const rows=[];snap.forEach(d=>rows.push(patchShopIfMissing({...d.data(),id:d.id})));
     TX=rows;scheduleDataReady();
-  });
+    hideDataLoading();
+  },err=>{console.error('Transactions listener error',err);hideDataLoading();});
 }
 
 function startDOListener(){
@@ -1826,6 +1898,10 @@ function goPage(p){
   if(p==='sales'){fillSaleShopSelects();renderSales();renderSalesIncome();}
   if(p==='clients'){renderClients();}
   if(p==='profitloss')renderPL();
+  try{
+    const ss=JSON.parse(localStorage.getItem('nitaSession')||'null');
+    if(ss&&CU){ss.page=p;localStorage.setItem('nitaSession',JSON.stringify(ss));}
+  }catch(e){}
 }
 window.goPage=goPage;
 
@@ -2262,7 +2338,7 @@ function renderTx(){
   const slice=txs.slice((txPage-1)*PER,txPage*PER);
   const tbody=document.getElementById('txBody');
   if(!slice.length){
-    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-icon">📭</div>No transactions found</div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="9"><div class="empty"><div class="empty-icon">📭</div>No transactions found</div></td></tr>';
   }else{
     tbody.innerHTML=slice.map(t=>{
       const isVoid=t.status==='VOID';
@@ -2292,6 +2368,7 @@ function renderTx(){
         <td>${t.shop||'—'}</td>
         <td style="color:${isVoid?'#6b7280':'#a78bfa'}">${isVoid?'<s>':''} ${(t.commission||0).toLocaleString()} ${isVoid?'</s>':''}</td>
         <td>${t.payment||'Cash'}</td>
+        <td>${fmtPayTime(t)}</td>
         <td>${billBadge(t)}</td>
         <td style="display:flex;gap:3px;flex-wrap:wrap">${acts}</td>
       </tr>`;
@@ -2422,7 +2499,7 @@ function renderCommissions(){
       <td colspan="7" style="padding:0">
         <table style="width:100%;min-width:400px;background:#1a1a2e;border:none">
           <thead><tr style="background:#22223a">
-            <th style="padding:7px 10px">Date</th><th>Service</th><th>Price</th><th>Commission</th><th>Status</th><th>Action</th>
+            <th style="padding:7px 10px">Date</th><th>Service</th><th>Price</th><th>Commission</th><th>Payment</th><th>Pay Time</th><th>Status</th><th>Action</th>
           </tr></thead>
           <tbody>
             ${rows.map(r=>`<tr style="border-bottom:1px solid #2a2a3e">
@@ -2430,6 +2507,8 @@ function renderCommissions(){
               <td style="font-size:12px">${r.service||''}</td>
               <td style="font-size:12px;color:#9ca3af">${(r.price||0).toLocaleString()}</td>
               <td style="font-size:12px;color:#a78bfa">${(r.commission||0).toLocaleString()}</td>
+              <td style="font-size:12px">${r.payment||'Cash'}</td>
+              <td style="font-size:12px">${fmtPayTime(r)}</td>
               <td>${r.adminStatus==='APPROVED'?'<span class="badge b-approved">✅ Paid</span>':'<span class="badge b-pending">⏳ Unpaid</span>'}</td>
               <td><button class="btn-success" style="padding:2px 7px;font-size:11px" onclick="setAS('${r.id}','APPROVED')">✅</button>
                   <button class="btn-warn" style="padding:2px 7px;font-size:11px;margin-left:2px" onclick="setAS('${r.id}','PENDING')">⏳</button></td>
@@ -2830,6 +2909,21 @@ function openEdit(id){
   document.getElementById('editModal').classList.add('show');
 }
 window.openEdit=openEdit;
+
+function calcEditComm(){
+  const svc=document.getElementById('eSvc').value;
+  const price=parseFloat(document.getElementById('ePrice').value)||0;
+  const s=getSvc(svc);
+  const r=s?s.r:0;
+  const comm=Math.round(price*r/100);
+  document.getElementById('eCommVal').textContent='Ksh '+comm.toLocaleString();
+}
+window.calcEditComm=calcEditComm;
+
+function closeEditModal(){
+  document.getElementById('editModal').classList.remove('show');
+}
+window.closeEditModal=closeEditModal;
 
 function toggleEditPaymentDetails(){
   const payment=document.getElementById('ePayment').value;
@@ -3459,13 +3553,14 @@ function renderReport(){
     <td style="color:#4ade80">${(x.price||0).toLocaleString()}</td>
     <td style="color:#a78bfa">${(x.commission||0).toLocaleString()}</td>
     <td>${x.payment||'Cash'}</td>
+    <td>${fmtPayTime(x)}</td>
     <td>${billBadge(x)}</td>
     <td>${x.adminStatus==='APPROVED'?'<span class="badge b-approved">✅ Paid</span>':'<span class="badge b-pending">⏳ Unpaid</span>'}</td>
   </tr>`).join('')+`<tr class="totals-row">
     <td colspan="4"><strong>TOTAL — ${t.length} records</strong></td>
     <td><strong>${tS.toLocaleString()}</strong></td>
     <td><strong>${tC.toLocaleString()}</strong></td>
-    <td colspan="3"></td>
+    <td colspan="4"></td>
   </tr>`;
 }
 window.renderReport=renderReport;
@@ -5452,10 +5547,10 @@ window.closePinAndGoBack=closePinAndGoBack;
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator){
   const SW=`
-const CACHE='nita-v2';
+const CACHE='nita-v3';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.add(location.href)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(cached=>{const net=fetch(e.request).then(r=>{if(r&&r.status===200){const cl=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}return r;}).catch(()=>cached);return cached||net;}));});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).then(r=>{if(r&&r.status===200){const cl=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}return r;}).catch(()=>caches.match(e.request)));return;}e.respondWith(caches.match(e.request).then(cached=>{const net=fetch(e.request).then(r=>{if(r&&r.status===200){const cl=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}return r;}).catch(()=>cached);return cached||net;}));});
   `;
   const blob=new Blob([SW],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'}).catch(e=>console.warn('SW:',e));
