@@ -193,16 +193,6 @@ tr:hover td{background:#22223a}
 .sale-income-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:8px}
 /* CLEARED DEBT badge — unmissable */
 .b-cleared{background:linear-gradient(135deg,#052e16,#065f46);color:#00ff88;border:2px solid #00ff88;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:3px 12px;border-radius:10px;box-shadow:0 0 10px rgba(0,255,136,.4)}
-/* STOCK */
-.stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.stock-card{background:#2a2a3e;border:1px solid #3d3d5c;border-radius:10px;padding:14px;position:relative}
-.stock-card.low{border-color:#dc2626;background:#1c0a0a}
-.stock-card.ok{border-color:#166534}
-.stock-name{font-size:14px;font-weight:700;color:#c4b5fd;margin-bottom:4px}
-.stock-qty{font-size:26px;font-weight:900;color:#4ade80;line-height:1}
-.stock-qty.low{color:#f87171}
-.stock-unit{font-size:11px;color:#6b7280;margin-top:2px}
-.stock-low-warn{font-size:11px;color:#f87171;font-weight:700;margin-top:4px}
 /* CLIENT RECORDS */
 .client-card{background:#2a2a3e;border:1px solid #3d3d5c;border-radius:10px;padding:14px;margin-bottom:10px}
 .client-name-big{font-size:16px;font-weight:800;color:#c4b5fd;margin-bottom:4px}
@@ -553,7 +543,6 @@ tr:hover td{background:#22223a}
     <div class="comm-preview"><span>Total</span><strong id="dedTotalVal">Ksh 0</strong></div>
     <div class="form-group" style="margin-bottom:12px">
       <label>Note (optional)</label>
-      <input type="text" id="dedNote" placeholder="e.g. for personal use, salon stock...">
     </div>
     <p style="font-size:11px;color:#6b7280;margin-bottom:12px">📌 This will be deducted from your commission when admin settles up. Be honest — this keeps things fair for everyone.</p>
     <div class="modal-actions">
@@ -704,51 +693,6 @@ tr:hover td{background:#22223a}
   <option value="Hair Oil">
   <option value="Accessories">
 </datalist>
-
-<!-- STOCK ITEM MODAL -->
-<div class="modal-bg" id="stockModal">
-  <div class="modal-box" style="max-width:420px">
-    <div class="modal-title" id="stockModalTitle">📦 Add Stock Item</div>
-    <input type="hidden" id="stockEditId">
-    <div class="form-row" style="margin-bottom:12px">
-      <div class="form-group">
-        <label>Item Name</label>
-        <input type="text" id="stockName" placeholder="e.g. Braiding Gel, Braids...">
-      </div>
-      <div class="form-group">
-        <label>Category</label>
-        <select id="stockCat">
-          <option value="Product">🧴 Product (for sale)</option>
-          <option value="Supply">🔧 Supply (for use)</option>
-          <option value="Equipment">⚡ Equipment</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row" style="margin-bottom:12px">
-      <div class="form-group">
-        <label>Current Quantity</label>
-        <input type="number" id="stockQty" placeholder="0" min="0">
-      </div>
-      <div class="form-group">
-        <label>Unit</label>
-        <input type="text" id="stockUnit" placeholder="e.g. bottles, packs, rolls">
-      </div>
-    </div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Low Stock Alert (warn below this qty)</label>
-      <input type="number" id="stockAlert" placeholder="e.g. 3" min="0" value="3">
-    </div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Note (optional)</label>
-      <input type="text" id="stockNote" placeholder="e.g. order from supplier X...">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeStockModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="lockBtn(this,saveStockItem)">💾 Save</button>
-    </div>
-  </div>
-</div>
-
 <!-- CLIENT MODAL -->
 <div class="modal-bg" id="clientModal">
   <div class="modal-box" style="max-width:420px">
@@ -819,7 +763,6 @@ tr:hover td{background:#22223a}
       <div class="nav-item" onclick="goPage('deductions')" data-p="deductions"><span class="nav-icon">📦</span> Deductions</div>
       <div class="nav-item" onclick="goPage('expenses')" data-p="expenses"><span class="nav-icon">🧾</span> Expenses</div>
       <div class="nav-item" onclick="goPage('sales')" data-p="sales"><span class="nav-icon">🛍️</span> Sales</div>
-      <div class="nav-item" onclick="goPage('stock')" data-p="stock"><span class="nav-icon">📦</span> Stock</div>
       <div class="nav-item" onclick="goPage('clients')" data-p="clients"><span class="nav-icon">👥</span> Clients</div>
       <div class="nav-item adm" onclick="goPage('profitloss')" data-p="profitloss"><span class="nav-icon">📉</span> P&amp;L</div>
       <div class="nav-item adm" onclick="goPage('dashboard')" data-p="dashboard"><span class="nav-icon">🏆</span> Dashboard</div>
@@ -1320,32 +1263,6 @@ tr:hover td{background:#22223a}
           <div class="pagination" id="slPages"></div>
         </div>
       </div>
-
-      <!-- STOCK / INVENTORY PAGE -->
-      <div class="page" id="page-stock">
-        <div class="page-title">📦 Stock & Inventory</div>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
-            <div class="card-title" style="margin-bottom:0">Product Stock Levels</div>
-            <button class="btn btn-primary adm" onclick="openStockModal()" style="font-size:13px;padding:7px 14px">➕ Add / Update Item</button>
-          </div>
-          <p style="font-size:12px;color:#6b7280;margin-bottom:0">Track what's in the shop. Items go red when stock drops to or below the alert threshold. Staff can report usage; admin manages quantities.</p>
-        </div>
-        <div class="card">
-          <div class="filters" style="margin-bottom:12px">
-            <input type="text" id="stockQ" placeholder="🔍 Search item..." oninput="renderStock()" style="flex:1;min-width:120px">
-            <select id="stockCatFilter" onchange="renderStock()">
-              <option value="">All Categories</option>
-              <option value="Product">🧴 Products (for sale)</option>
-              <option value="Supply">🔧 Supplies (for use)</option>
-              <option value="Equipment">⚡ Equipment</option>
-            </select>
-          </div>
-          <div id="stockLowAlert" style="margin-bottom:10px"></div>
-          <div id="stockGrid" class="stock-grid"></div>
-        </div>
-      </div>
-
       <!-- CLIENT RECORDS PAGE -->
       <div class="page" id="page-clients">
         <div class="page-title">👥 Client Records</div>
@@ -1758,16 +1675,6 @@ window.loginAsDemo = function() {
         timestamp: d.getTime(),
         status: 'Completed'
       });
-    });
-
-    demoExpenses.push({
-      id: `DEMO-EXP-${100 + i}`,
-      date: dateStr,
-      category: 'Supplies',
-      description: 'Demo sandbox inventory restock',
-      amount: 2000,
-      staff: 'Admin'
-    });
   }
 
   // 2. Inject into global app state arrays
@@ -1833,7 +1740,6 @@ window.doLogout=function(){
   if(typeof chatUnsubConvos!=='undefined'&&chatUnsubConvos)try{chatUnsubConvos();}catch(e){}
   if(typeof chatUnsubMsgs!=='undefined'&&chatUnsubMsgs)try{chatUnsubMsgs();}catch(e){}
   if(typeof unsubSales!=='undefined'&&unsubSales)try{unsubSales();}catch(e){}
-  if(typeof unsubStock!=='undefined'&&unsubStock)try{unsubStock();}catch(e){}
   if(typeof unsubClients!=='undefined'&&unsubClients)try{unsubClients();}catch(e){}
   CU=null;TX=[];DAYOFFS=[];DEDUCTIONS=[];EXPENSES=[];SALES=[];
   if(typeof activeConvoId!=='undefined')activeConvoId=null;
@@ -1962,8 +1868,7 @@ async function loadData(){
   fillExpStaffFilter();
   // Start sales listener
   startSalesListener();
-  // Start stock + client listeners
-  startStockListener();
+  // Start client listeners
   startClientListener();
   // init sales date range
   const slFromEl=document.getElementById('slFrom');const slToEl=document.getElementById('slTo');
@@ -2079,7 +1984,6 @@ function buildBottomNav(){
     {p:'deductions',icon:'📦',label:'Deduct'},
     {p:'expenses',icon:'🧾',label:'Expenses'},
     {p:'sales',icon:'🛍️',label:'Sales'},
-    {p:'stock',icon:'📦',label:'Stock'},
     {p:'clients',icon:'👥',label:'Clients'},
     {p:'profitloss',icon:'📉',label:'P&L'},
     {p:'dashboard',icon:'🏆',label:'Dash'},
@@ -2095,7 +1999,6 @@ function buildBottomNav(){
     {p:'deductions',icon:'📦',label:'Deduct'},
     {p:'expenses',icon:'🧾',label:'Expenses'},
     {p:'sales',icon:'🛍️',label:'Sales'},
-    {p:'stock',icon:'📦',label:'Stock'},
     {p:'clients',icon:'👥',label:'Clients'},
     {p:'leaderboard',icon:'🥇',label:'Board'},
     {p:'adminMsgs',icon:'💌',label:'Messages'},
@@ -2139,7 +2042,6 @@ function goPage(p){
   if(p==='newSale'){_savingInProgress=false;const b=document.getElementById('saveBtn');if(b){b.disabled=false;b.textContent='💾 Save Transaction(s)';}}
   if(p==='expenses'){fillExpStaffFilter();renderExpenses();}
   if(p==='sales'){fillSaleShopSelects();renderSales();renderSalesIncome();}
-  if(p==='stock')renderStock();
   if(p==='clients'){renderClients();}
   if(p==='profitloss')renderPL();
 }
@@ -5113,132 +5015,6 @@ async function approveExpense(id, status){
   }catch(e){showToast('Error: '+e.message,true);}
 }
 window.approveExpense=approveExpense;
-
-// ===== STOCK / INVENTORY =====
-let STOCK=[];
-let unsubStock=null;
-
-function startStockListener(){
-  if(unsubStock)try{unsubStock();}catch(e){}
-  unsubStock=onSnapshot(collection(db,'stock'),snap=>{
-    STOCK=[];
-    snap.forEach(d=>STOCK.push({...d.data(),id:d.id}));
-    STOCK.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    renderStock();
-  });
-}
-
-function openStockModal(editId){
-  const isAdm=CU&&CU.role==='admin';
-  if(!isAdm){showToast('Admin only — contact manager to update stock',true);return;}
-  if(editId){
-    const s=STOCK.find(x=>x.id===editId);if(!s)return;
-    document.getElementById('stockModalTitle').textContent='✏️ Edit Stock Item';
-    document.getElementById('stockEditId').value=editId;
-    document.getElementById('stockName').value=s.name||'';
-    document.getElementById('stockCat').value=s.category||'Product';
-    document.getElementById('stockQty').value=s.qty||0;
-    document.getElementById('stockUnit').value=s.unit||'';
-    document.getElementById('stockAlert').value=s.alertBelow||3;
-    document.getElementById('stockNote').value=s.note||'';
-  }else{
-    document.getElementById('stockModalTitle').textContent='📦 Add Stock Item';
-    document.getElementById('stockEditId').value='';
-    document.getElementById('stockName').value='';
-    document.getElementById('stockCat').value='Product';
-    document.getElementById('stockQty').value='';
-    document.getElementById('stockUnit').value='';
-    document.getElementById('stockAlert').value='3';
-    document.getElementById('stockNote').value='';
-  }
-  document.getElementById('stockModal').classList.add('show');
-}
-window.openStockModal=openStockModal;
-function closeStockModal(){document.getElementById('stockModal').classList.remove('show');}
-window.closeStockModal=closeStockModal;
-
-async function saveStockItem(){
-  const editId=document.getElementById('stockEditId').value;
-  const name=document.getElementById('stockName').value.trim();
-  const category=document.getElementById('stockCat').value;
-  const qty=parseFloat(document.getElementById('stockQty').value)||0;
-  const unit=document.getElementById('stockUnit').value.trim()||'units';
-  const alertBelow=parseFloat(document.getElementById('stockAlert').value)||3;
-  const note=document.getElementById('stockNote').value.trim();
-  if(!name){showToast('Enter item name',true);return;}
-  const payload={name,category,qty,unit,alertBelow,note,updatedAt:new Date().toISOString(),updatedBy:CU.name};
-  try{
-    if(editId){
-      await updateDoc(doc(db,'stock',editId),payload);
-      showToast(`📦 ${name} updated`);
-    }else{
-      payload.createdAt=new Date().toISOString();
-      await addDoc(collection(db,'stock'),payload);
-      showToast(`📦 ${name} added to stock`);
-    }
-    closeStockModal();
-  }catch(e){showToast('Error: '+e.message,true);}
-}
-window.saveStockItem=saveStockItem;
-
-async function adjustStock(id,delta){
-  const s=STOCK.find(x=>x.id===id);if(!s)return;
-  const newQty=Math.max(0,(s.qty||0)+delta);
-  if(delta<0&&!confirm(`Reduce ${s.name} by ${Math.abs(delta)}? (${s.qty||0} → ${newQty} ${s.unit||'units'})`))return;
-  try{
-    await updateDoc(doc(db,'stock',id),{qty:newQty,updatedAt:new Date().toISOString(),updatedBy:CU.name});
-  }catch(e){showToast('Error: '+e.message,true);}
-}
-window.adjustStock=adjustStock;
-
-async function deleteStockItem(id){
-  if(!confirm('Remove this item from stock? This cannot be undone.'))return;
-  try{await deleteDoc(doc(db,'stock',id));showToast('Item removed');}
-  catch(e){showToast('Error: '+e.message,true);}
-}
-window.deleteStockItem=deleteStockItem;
-
-function renderStock(){
-  if(!CU||!document.getElementById('page-stock'))return;
-  const isAdm=CU.role==='admin';
-  const q=(document.getElementById('stockQ')?.value||'').toLowerCase();
-  const catF=document.getElementById('stockCatFilter')?.value||'';
-  let rows=[...STOCK];
-  if(q)rows=rows.filter(s=>(s.name||'').toLowerCase().includes(q));
-  if(catF)rows=rows.filter(s=>s.category===catF);
-  const lowItems=rows.filter(s=>(s.qty||0)<=(s.alertBelow||3));
-  const alertEl=document.getElementById('stockLowAlert');
-  if(alertEl){
-    alertEl.innerHTML=lowItems.length
-      ?`<div style="background:#1c0a0a;border:1px solid #dc2626;border-radius:8px;padding:10px 14px;font-size:13px;color:#f87171;font-weight:600">⚠️ Low stock: ${lowItems.map(s=>s.name).join(', ')}</div>`
-      :'';
-  }
-  const grid=document.getElementById('stockGrid');
-  if(!grid)return;
-  if(!rows.length){
-    grid.innerHTML='<div class="empty"><div class="empty-icon">📦</div>No stock items yet — add some above</div>';
-    return;
-  }
-  grid.innerHTML=rows.map(s=>{
-    const low=(s.qty||0)<=(s.alertBelow||3);
-    const catIcon={Product:'🧴',Supply:'🔧',Equipment:'⚡'}[s.category]||'📦';
-    return`<div class="stock-card ${low?'low':'ok'}">
-      <div class="stock-name">${catIcon} ${s.name}</div>
-      <div class="stock-qty ${low?'low':''}">${s.qty||0}</div>
-      <div class="stock-unit">${s.unit||'units'} · ${s.category}</div>
-      ${low?`<div class="stock-low-warn">⚠️ Low! (alert at ${s.alertBelow||3})</div>`:''}
-      ${s.note?`<div style="font-size:11px;color:#6b7280;margin-top:4px">${s.note}</div>`:''}
-      <div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn-success" onclick="adjustStock('${s.id}',1)" style="padding:3px 9px;font-size:12px">+1</button>
-        <button class="btn-danger" onclick="adjustStock('${s.id}',-1)" style="padding:3px 9px;font-size:12px">−1</button>
-        ${isAdm?`<button class="btn-secondary" onclick="openStockModal('${s.id}')" style="padding:3px 9px;font-size:12px;border:1px solid #3d3d5c;border-radius:6px;cursor:pointer">✏️</button>
-        <button class="btn-danger" onclick="deleteStockItem('${s.id}')" style="padding:3px 9px;font-size:12px">🗑</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-window.renderStock=renderStock;
-
 // ===== CLIENT RECORDS =====
 let CLIENTS=[];
 let unsubClients=null;
